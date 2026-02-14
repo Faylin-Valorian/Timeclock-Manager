@@ -1,0 +1,12 @@
+/* 1. Shared Global Styles */
+@import 'styles/layout';
+@import 'styles/forms';
+@import 'styles/lists';
+
+/* 2. Module Specific Styles */
+@import 'modules/users/users';
+@import 'modules/access/access';
+@import 'modules/payroll/payroll';
+@import 'modules/holidays/holidays';
+@import 'modules/jobs/jobs';
+@import 'modules/locations/locations';

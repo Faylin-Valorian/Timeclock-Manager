@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<info>
+    <id>timeclock_manager</id>
+    <name>Timeclock Manager</name>
+    <summary>A modular time tracking and management system.</summary>
+    <description>Manage employee time, payroll, holidays, and job codes with a modular design.</description>
+    <version>0.0.2</version>
+    <licence>agpl</licence>
+    <author>Faylin Valorian</author>
+    <namespace>TimeclockManager</namespace>
+    <category>organization</category>
+    <bugs>https://github.com/faylin-valorian/timeclock_manager/issues</bugs>
+    <dependencies>
+        <nextcloud min-version="32" max-version="32"/>
+    </dependencies>
+    <navigations>
+        <navigation>
+            <name>Timeclock</name>
+            <route>timeclock_manager.page.index</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
+</info>
