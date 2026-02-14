@@ -16,7 +16,7 @@ class LocationsController extends Controller {
     public function __construct(IRequest $request, 
                                 LocationsService $service,
                                 AnalysisService $analysisService) {
-        parent::__construct('timeclock_manager', $request);
+        parent::__construct('timeclock-manager', $request);
         $this->service = $service;
         $this->analysisService = $analysisService;
     }

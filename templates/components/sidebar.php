@@ -60,7 +60,7 @@ $adminModules = [
         
         <?php if ($_['mode'] === 'admin'): ?>
             <li class="nav-item">
-                <a class="nav-link" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('timeclock_manager.page.index')); ?>">
+                <a class="nav-link" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('timeclock-manager.page.index')); ?>">
                     <span class="icon-history"></span>
                     <span>Back to Timesheet</span>
                 </a>
@@ -86,7 +86,7 @@ $adminModules = [
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('timeclock_manager.admin.index')); ?>">
+                <a class="nav-link" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('timeclock-manager.admin.index')); ?>">
                     <span class="icon-settings-dark"></span><span>Admin Panel</span>
                 </a>
             </li>

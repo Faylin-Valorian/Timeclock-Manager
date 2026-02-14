@@ -1,94 +1,182 @@
 import { generateUrl } from '@nextcloud/router';
 import axios from '@nextcloud/axios';
 
-/**
- * Shared API Client for Timeclock Manager
- */
 export const StechAPI = {
     
-    // --- CORE ---
-    async getAttributes() {
-        const url = generateUrl('/apps/timeclock_manager/api/attributes');
-        const response = await axios.get(url);
-        return response.data;
-    },
+    /**
+     * Generic Request Helper
+     * Automatically appends the App ID and handles errors.
+     */
+    async request(method, url, data = null, params = null) {
+        try {
+            // APP ID: timeclock-manager (Hyphenated)
+            const fullUrl = generateUrl('/apps/timeclock-manager' + url);
+            
+            const config = {
+                method: method,
+                url: fullUrl,
+                data: data,
+                params: params
+            };
 
-    // --- TIMESHEETS ---
-    async getTimesheets(startDate, endDate) {
-        // Implementation for calendar fetching
-        const url = generateUrl('/apps/timeclock_manager/api/timesheets');
-        const response = await axios.get(url, { params: { start: startDate, end: endDate } });
-        return response.data;
-    },
-
-    // --- ADMIN MODULES ---
-    admin: {
-        // Users
-        async getUsers() {
-            const response = await axios.get(generateUrl('/apps/timeclock_manager/api/admin/users'));
+            const response = await axios(config);
             return response.data;
-        },
-        
-        // Access
-        async getGroups() {
-            const response = await axios.get(generateUrl('/apps/timeclock_manager/api/admin/groups'));
-            return response.data;
-        },
-        async getAccess() {
-            const response = await axios.get(generateUrl('/apps/timeclock_manager/api/admin/access'));
-            return response.data;
-        },
-        async saveAccess(payload) {
-            return await axios.post(generateUrl('/apps/timeclock_manager/api/admin/access'), payload);
-        },
-
-        // Settings (Payroll)
-        async getSettings() {
-            const response = await axios.get(generateUrl('/apps/timeclock_manager/api/admin/settings'));
-            return response.data;
-        },
-        async saveSettings(payload) {
-            return await axios.post(generateUrl('/apps/timeclock_manager/api/admin/settings'), payload);
-        },
-
-        // Holidays
-        async getHolidays() {
-            const response = await axios.get(generateUrl('/apps/timeclock_manager/api/admin/holidays'));
-            return response.data;
-        },
-        async saveHoliday(payload) {
-            return await axios.post(generateUrl('/apps/timeclock_manager/api/admin/holidays'), payload);
-        },
-        async toggleHoliday(id) {
-            return await axios.post(generateUrl(`/apps/timeclock_manager/api/admin/holidays/${id}/toggle`));
-        },
-
-        // Jobs
-        async getJobs() {
-            const response = await axios.get(generateUrl('/apps/timeclock_manager/api/admin/jobs'));
-            return response.data;
-        },
-        async saveJob(payload) {
-            return await axios.post(generateUrl('/apps/timeclock_manager/api/admin/jobs'), payload);
-        },
-        async toggleJob(id) {
-            return await axios.post(generateUrl(`/apps/timeclock_manager/api/admin/jobs/${id}/toggle`));
-        },
-
-        // Locations
-        async getStates() {
-            const response = await axios.get(generateUrl('/apps/timeclock_manager/api/admin/states'));
-            return response.data;
-        },
-        async toggleState(id) {
-            return await axios.post(generateUrl(`/apps/timeclock_manager/api/admin/states/${id}/toggle`));
-        },
-        async getCounties(stateAbbr) {
-            const response = await axios.get(generateUrl(`/apps/timeclock_manager/api/admin/counties/${stateAbbr}`));
-            return response.data;
-        },
-        async toggleCounty(id) {
-            return await axios.post(generateUrl(`/apps/timeclock_manager/api/admin/counties/${id}/toggle`));
+        } catch (error) {
+            console.error(`API Error [${method} ${url}]:`, error);
+            throw error;
         }
+    },
+
+    // =========================================================================
+    // 1. TIMESHEET & ENTRY FORM
+    // =========================================================================
+
+    /**
+     * Load initial data (Jobs, States) for the Timesheet page.
+     */
+    async getAttributes() {
+        return this.request('GET', '/api/attributes');
+    },
+
+    /**
+     * Fetch calendar events (Timesheets + Payroll Markers).
+     * @param {string} start - Start date (YYYY-MM-DD)
+     * @param {string} end - End date (YYYY-MM-DD)
+     * @param {number} archiveMode - 0 = Active, 1 = Archived
+     */
+    async getTimesheets(start, end, archiveMode = 0) {
+        return this.request('GET', '/api/timesheets', null, { 
+            start, 
+            end, 
+            archive: archiveMode 
+        });
+    },
+
+    /**
+     * Get details for a single timesheet entry (Edit Mode).
+     */
+    async getTimesheetDetails(id) {
+        return this.request('GET', `/api/timesheets/${id}`);
+    },
+
+    /**
+     * Save a new or existing timesheet entry.
+     * @param {Object} formData 
+     */
+    async saveTimesheet(formData) {
+        return this.request('POST', '/api/timesheets', formData);
+    },
+
+    /**
+     * Archive a timesheet entry (Soft Delete).
+     */
+    async deleteTimesheet(id) {
+        return this.request('DELETE', `/api/timesheets/${id}`);
+    },
+
+    /**
+     * Restore an archived timesheet entry.
+     */
+    async restoreTimesheet(id) {
+        return this.request('POST', `/api/timesheets/${id}/restore`);
+    },
+
+    /**
+     * Fetch holidays specifically for the Calendar view (Read-Only background events).
+     */
+    async getCalendarHolidays(start, end) {
+        return this.request('GET', '/api/calendar/holidays', null, { start, end });
+    },
+
+
+    // =========================================================================
+    // 2. ADMIN MODULES
+    // =========================================================================
+
+    // --- USERS ---
+    async getUsers() {
+        return this.request('GET', '/api/admin/users');
+    },
+
+    async toggleUser(uid, status) {
+        return this.request('POST', '/api/admin/users/toggle', { uid, status });
+    },
+
+    // --- ACCESS CONTROL ---
+    async getGroups() {
+        return this.request('GET', '/api/admin/groups');
+    },
+
+    async getAccessRules() {
+        return this.request('GET', '/api/admin/access');
+    },
+
+    async saveAccessRule(key, groups) {
+        return this.request('POST', '/api/admin/access', { key, groups });
+    },
+
+    // --- PAYROLL ---
+    async getPayrollSettings() {
+        return this.request('GET', '/api/admin/settings');
+    },
+
+    async savePayrollSetting(key, value) {
+        return this.request('POST', '/api/admin/settings', { key, value });
+    },
+
+    // --- HOLIDAYS (Management) ---
+    async getAdminHolidays() {
+        return this.request('GET', '/api/admin/holidays');
+    },
+
+    async saveAdminHoliday(data) {
+        return this.request('POST', '/api/admin/holidays', data);
+    },
+
+    async toggleHoliday(id) {
+        return this.request('POST', `/api/admin/holidays/${id}/toggle`);
+    },
+
+    // --- JOBS ---
+    async getJobs() {
+        return this.request('GET', '/api/admin/jobs');
+    },
+
+    async saveJob(data) {
+        return this.request('POST', '/api/admin/jobs', data);
+    },
+
+    async toggleJob(id) {
+        return this.request('POST', `/api/admin/jobs/${id}/toggle`);
+    },
+
+    // --- LOCATIONS ---
+    async getStates() {
+        return this.request('GET', '/api/admin/states');
+    },
+
+    async toggleState(id) {
+        return this.request('POST', `/api/admin/states/${id}/toggle`);
+    },
+
+    /**
+     * Get counties for a state. Used by both Admin and Entry Form.
+     * @param {string} abbr - State Abbreviation (e.g. 'TX')
+     */
+    async getCounties(abbr) {
+        return this.request('GET', `/api/admin/counties/${abbr}`);
+    },
+
+    async toggleCounty(id) {
+        return this.request('POST', `/api/admin/counties/${id}/toggle`);
+    },
+
+
+    // =========================================================================
+    // 3. ANALYSIS
+    // =========================================================================
+    
+    async getAnalysisStats(filters) {
+        return this.request('GET', '/api/analysis/stats', null, filters);
     }
 };

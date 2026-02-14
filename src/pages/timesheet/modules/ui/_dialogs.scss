@@ -1,0 +1,51 @@
+/* CENTERED ERROR & CONFIRMATION OVERLAYS */
+#stech-centered-error,
+.custom-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10001; /* Higher than modal */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.stech-error-content {
+    background: var(--color-main-background);
+    color: var(--color-text-maxcontrast);
+    padding: 30px;
+    border-radius: var(--border-radius-large);
+    text-align: center;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.2);
+    border-top: 6px solid var(--color-error);
+    max-width: 450px;
+    width: 90%;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.stech-error-content h3 {
+    color: var(--color-error);
+    margin-top: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.stech-error-content p {
+    font-size: 1.1rem;
+    margin: 15px 0 25px 0;
+    line-height: 1.5;
+}
+
+.stech-error-content button.primary-button {
+    background-color: var(--color-primary-element);
+    color: var(--color-primary-text);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}

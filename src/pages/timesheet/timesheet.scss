@@ -1,0 +1,11 @@
+/* 1. Layout & Containers */
+@import 'styles/layout';
+
+/* 2. Global Components */
+@import '../../components/sidebar/sidebar'; /* <-- ADD THIS */
+
+/* 3. Page Modules */
+@import 'modules/calendar/calendar';
+@import 'modules/entryform/entryform';
+@import 'modules/widgets/time-widget';
+@import 'modules/ui/dialogs';

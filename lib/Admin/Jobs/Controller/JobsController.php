@@ -16,7 +16,7 @@ class JobsController extends Controller {
     public function __construct(IRequest $request, 
                                 JobsService $service,
                                 AnalysisService $analysisService) {
-        parent::__construct('timeclock_manager', $request);
+        parent::__construct('timeclock-manager', $request);
         $this->service = $service;
         $this->analysisService = $analysisService;
     }

@@ -8,29 +8,44 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IUserSession;
 use OCP\IGroupManager;
+// Attributes for Nextcloud 25+
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+
+use OCA\TimeclockManager\Service\AnalysisService;
 
 class PageController extends Controller {
     private $userSession;
     private $groupManager;
-    private $analysisService; // Can be null now
+    private $analysisService;
 
     public function __construct(IRequest $request, 
                                 IUserSession $userSession, 
                                 IGroupManager $groupManager,
-                                $analysisService = null) { // No type hint to prevent crash
-        parent::__construct('timeclock_manager', $request);
+                                ?AnalysisService $analysisService = null) {
+        // Must match the folder name/app ID exactly
+        parent::__construct('timeclock-manager', $request);
         $this->userSession = $userSession;
         $this->groupManager = $groupManager;
         $this->analysisService = $analysisService;
     }
 
+    /**
+     * Helper to safely check permissions.
+     * If AnalysisService is missing (file deleted), it defaults to Admin-only access.
+     */
     private function hasPerm(string $key, bool $isAdmin): bool {
-        // Fallback: If service is missing, only Admins get access
-        if (!$this->analysisService) return $isAdmin;
+        if (!$this->analysisService) {
+            return $isAdmin;
+        }
         return $isAdmin || $this->analysisService->checkAccess($key);
     }
 
-    /** @NoAdminRequired @NoCSRFRequired */
+    /**
+     * Main Timesheet Interface
+     */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function index(): TemplateResponse {
         $user = $this->userSession->getUser();
         $uid = $user ? $user->getUID() : '';
@@ -46,18 +61,21 @@ class PageController extends Controller {
             'target_user' => $this->request->getParam('target_user', '')
         ];
 
-        $response = new TemplateResponse('timeclock_manager', 'timesheet/index');
-        $response->setParams($params);
-        return $response;
+        return new TemplateResponse('timeclock-manager', 'timesheet/index', $params);
     }
 
-    /** @NoAdminRequired @NoCSRFRequired */
+    /**
+     * Admin Panel Shell
+     */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function adminIndex(): TemplateResponse {
         $user = $this->userSession->getUser();
         $isAdmin = $user && $this->groupManager->isAdmin($user->getUID());
         
+        // Security Check
         if (!$this->hasPerm('can_view_admin', $isAdmin)) {
-             return new TemplateResponse('timeclock_manager', 'error', ['msg' => 'Access Denied'], 403);
+             return new TemplateResponse('timeclock-manager', 'error', ['msg' => 'Access Denied'], 403);
         }
 
         // Sidebar Permissions
@@ -71,18 +89,20 @@ class PageController extends Controller {
             'can_access_access'    => $this->hasPerm('admin_access', $isAdmin),
         ];
 
-        $response = new TemplateResponse('timeclock_manager', 'admin/index');
-        $response->setParams($perms);
-        return $response;
+        return new TemplateResponse('timeclock-manager', 'admin/index', $perms);
     }
 
-    /** @NoAdminRequired @NoCSRFRequired */
+    /**
+     * Analysis Dashboard
+     */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function analysisIndex(): TemplateResponse {
         $user = $this->userSession->getUser();
         $isAdmin = $user && $this->groupManager->isAdmin($user->getUID());
 
         if (!$this->hasPerm('can_view_analysis', $isAdmin)) {
-            return new TemplateResponse('timeclock_manager', 'error', ['msg' => 'Access Denied'], 403);
+            return new TemplateResponse('timeclock-manager', 'error', ['msg' => 'Access Denied'], 403);
         }
 
         $perms = [
@@ -94,8 +114,6 @@ class PageController extends Controller {
             'can_view_job_breakdown'       => ($this->hasPerm('analysis_financial', $isAdmin) || $this->hasPerm('analysis_jobs', $isAdmin))
         ];
 
-        $response = new TemplateResponse('timeclock_manager', 'analysis/index');
-        $response->setParams($perms);
-        return $response;
+        return new TemplateResponse('timeclock-manager', 'analysis/index', $perms);
     }
 }

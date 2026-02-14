@@ -10,7 +10,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 class AdminController extends Controller {
 
     public function __construct(IRequest $request) {
-        parent::__construct('timeclock_manager', $request);
+        parent::__construct('timeclock-manager', $request);
     }
 
     /**
@@ -18,6 +18,6 @@ class AdminController extends Controller {
      * @NoCSRFRequired
      */
     public function index(): TemplateResponse { 
-        return new TemplateResponse('timeclock_manager', 'admin'); 
+        return new TemplateResponse('timeclock-manager', 'admin'); 
     }
 }
