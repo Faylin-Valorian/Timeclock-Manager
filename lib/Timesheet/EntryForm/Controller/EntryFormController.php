@@ -92,20 +92,20 @@ class EntryFormController extends Controller {
             $qb = $this->db->getQueryBuilder();
             if (!empty($data['timesheet_id'])) {
                 $tid = (int)$data['timesheet_id'];
-                $qb->update('stech_timesheets');
+                $qb->update('tm_timesheets');
                 foreach ($values as $col => $val) { if ($col !== 'userid') $qb->set($col, $qb->createNamedParameter($val)); }
                 $qb->where($qb->expr()->eq('timesheet_id', $qb->createNamedParameter($tid)))->executeStatement();
             } else {
-                $qb->insert('stech_timesheets');
+                $qb->insert('tm_timesheets');
                 foreach ($values as $col => $val) { $qb->setValue($col, $qb->createNamedParameter($val)); }
                 $qb->executeStatement();
-                $tid = (int)$this->db->lastInsertId('*PREFIX*stech_timesheets');
+                $tid = (int)$this->db->lastInsertId('*PREFIX*tm_timesheets');
             }
 
             if ($tid > 0) {
-                $this->db->prepare("DELETE FROM `*PREFIX*stech_activity` WHERE `timesheet_id` = ?")->execute([$tid]);
+                $this->db->prepare("DELETE FROM `*PREFIX*tm_activity` WHERE `timesheet_id` = ?")->execute([$tid]);
                 if (isset($data['work_desc']) && is_array($data['work_desc'])) {
-                    $stmt = $this->db->prepare("INSERT INTO `*PREFIX*stech_activity` (`timesheet_id`, `activity_description`, `activity_percent`) VALUES (?, ?, ?)");
+                    $stmt = $this->db->prepare("INSERT INTO `*PREFIX*tm_activity` (`timesheet_id`, `activity_description`, `activity_percent`) VALUES (?, ?, ?)");
                     foreach ($data['work_desc'] as $idx => $desc) { 
                         if (!empty($desc)) $stmt->execute([$tid, $desc, (int)($data['work_percent'][$idx] ?? 0)]);
                     }
@@ -121,7 +121,7 @@ class EntryFormController extends Controller {
     #[NoCSRFRequired]
     public function deleteTimesheet(int $id): DataResponse {
         $uid = $this->getEffectiveUserId(); 
-        $this->db->prepare("UPDATE `*PREFIX*stech_timesheets` SET `archive` = 1 WHERE `timesheet_id` = ? AND `userid` = ?")->execute([$id, $uid]);
+        $this->db->prepare("UPDATE `*PREFIX*tm_timesheets` SET `archive` = 1 WHERE `timesheet_id` = ? AND `userid` = ?")->execute([$id, $uid]);
         return new DataResponse(['status' => 'success']);
     }
 
@@ -129,7 +129,7 @@ class EntryFormController extends Controller {
     #[NoCSRFRequired]
     public function restoreTimesheet(int $id): DataResponse {
         $uid = $this->getEffectiveUserId();
-        $this->db->prepare("UPDATE `*PREFIX*stech_timesheets` SET `archive` = 0 WHERE `timesheet_id` = ? AND `userid` = ?")->execute([$id, $uid]);
+        $this->db->prepare("UPDATE `*PREFIX*tm_timesheets` SET `archive` = 0 WHERE `timesheet_id` = ? AND `userid` = ?")->execute([$id, $uid]);
         return new DataResponse(['status' => 'success']);
     }
 }

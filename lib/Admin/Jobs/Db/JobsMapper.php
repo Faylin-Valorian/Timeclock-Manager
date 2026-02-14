@@ -8,13 +8,13 @@ use OCP\IDBConnection;
 
 class JobsMapper extends QBMapper {
     public function __construct(IDBConnection $db) {
-        parent::__construct($db, 'stech_jobs');
+        parent::__construct($db, 'tm_jobs');
     }
 
     public function getJobs(): array {
         return $this->db->getQueryBuilder()
             ->select('*')
-            ->from('stech_jobs')
+            ->from('tm_jobs')
             ->orderBy('job_name', 'ASC')
             ->executeQuery()
             ->fetchAll();
@@ -36,14 +36,14 @@ class JobsMapper extends QBMapper {
         $id = !empty($data['id']) ? $data['id'] : (!empty($data['job_id']) ? $data['job_id'] : null);
 
         if ($id) {
-            $qb->update('stech_jobs');
+            $qb->update('tm_jobs');
             foreach ($fields as $col => $val) {
                 $qb->set($col, $qb->createNamedParameter($val));
             }
             $qb->where($qb->expr()->eq('job_id', $qb->createNamedParameter($id)))
                ->execute();
         } else {
-            $qb->insert('stech_jobs');
+            $qb->insert('tm_jobs');
             foreach ($fields as $col => $val) {
                 $qb->setValue($col, $qb->createNamedParameter($val));
             }
@@ -54,7 +54,7 @@ class JobsMapper extends QBMapper {
     public function toggleJob(int $id): void {
         $qb = $this->db->getQueryBuilder();
         $row = $qb->select('job_archive')
-            ->from('stech_jobs')
+            ->from('tm_jobs')
             ->where($qb->expr()->eq('job_id', $qb->createNamedParameter($id)))
             ->executeQuery()
             ->fetch();
@@ -62,7 +62,7 @@ class JobsMapper extends QBMapper {
         if ($row) {
             $newStatus = ((int)$row['job_archive'] === 1) ? 0 : 1;
             $qbUpdate = $this->db->getQueryBuilder();
-            $qbUpdate->update('stech_jobs')
+            $qbUpdate->update('tm_jobs')
                 ->set('job_archive', $qbUpdate->createNamedParameter($newStatus))
                 ->where($qbUpdate->expr()->eq('job_id', $qbUpdate->createNamedParameter($id)))
                 ->execute();

@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. SECURITY: Clear Impersonation
     // We strictly ensure no one is impersonating another user while in Admin Mode
-    sessionStorage.removeItem('stech_impersonate');
+    sessionStorage.removeItem('tm_impersonate');
 
     // 3. INIT: Sidebar Navigation
     // We pass a callback to the sidebar to handle module switching

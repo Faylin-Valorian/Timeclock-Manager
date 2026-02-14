@@ -8,14 +8,14 @@ use OCP\IDBConnection;
 
 class UsersMapper extends QBMapper {
     public function __construct(IDBConnection $db) {
-        parent::__construct($db, 'stech_employees');
+        parent::__construct($db, 'tm_employees');
     }
 
     public function getEmployeeStatusMap(): array {
         try {
             $rows = $this->db->getQueryBuilder()
                 ->select('*')
-                ->from('stech_employees')
+                ->from('tm_employees')
                 ->executeQuery()
                 ->fetchAll();
             $map = [];
@@ -32,21 +32,21 @@ class UsersMapper extends QBMapper {
         $now = date('Y-m-d H:i:s');
         $qb = $this->db->getQueryBuilder();
         $exists = $qb->select('*')
-                     ->from('stech_employees')
+                     ->from('tm_employees')
                      ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))
                      ->executeQuery()
                      ->fetch();
 
         if ($exists) {
             $qb = $this->db->getQueryBuilder();
-            $qb->update('stech_employees')
+            $qb->update('tm_employees')
                ->set('is_active', $qb->createNamedParameter($newStatus))
                ->set('status_changed_at', $qb->createNamedParameter($now))
                ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))
                ->execute();
         } else {
             $qb = $this->db->getQueryBuilder();
-            $qb->insert('stech_employees')
+            $qb->insert('tm_employees')
                ->values([
                    'uid' => $qb->createNamedParameter($uid),
                    'is_active' => $qb->createNamedParameter($newStatus),
@@ -57,12 +57,12 @@ class UsersMapper extends QBMapper {
 
     public function archiveUserHolidayEntries(string $uid): void {
         // NOTE: We use *PREFIX* when writing raw SQL, handled by Nextcloud
-        $sql = "UPDATE `*PREFIX*stech_timesheets` AS t 
+        $sql = "UPDATE `*PREFIX*tm_timesheets` AS t 
                 SET t.`archive` = 1 
                 WHERE t.`userid` = :uid 
                 AND t.`timesheet_date` > :today 
                 AND EXISTS (
-                    SELECT 1 FROM `*PREFIX*stech_holidays` h 
+                    SELECT 1 FROM `*PREFIX*tm_holidays` h 
                     WHERE t.`timesheet_date` BETWEEN h.`holiday_start_date` AND h.`holiday_end_date`
                 )";
         $stmt = $this->db->prepare($sql);

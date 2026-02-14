@@ -8,13 +8,13 @@ use OCP\IDBConnection;
 
 class HolidaysMapper extends QBMapper {
     public function __construct(IDBConnection $db) {
-        parent::__construct($db, 'stech_holidays');
+        parent::__construct($db, 'tm_holidays');
     }
 
     public function getHolidays(): array {
         return $this->db->getQueryBuilder()
             ->select('*')
-            ->from('stech_holidays')
+            ->from('tm_holidays')
             ->orderBy('holiday_start_date', 'DESC')
             ->executeQuery()
             ->fetchAll();
@@ -25,7 +25,7 @@ class HolidaysMapper extends QBMapper {
         $bg = $data['color'] ?? ($data['bg'] ?? '#e67e22'); // Handle frontend key var
 
         if (!empty($data['id'])) { 
-            $qb->update('stech_holidays')
+            $qb->update('tm_holidays')
             ->set('holiday_name', $qb->createNamedParameter($data['name']))
             ->set('holiday_start_date', $qb->createNamedParameter($data['start_date'] ?? $data['start']))
             ->set('holiday_end_date', $qb->createNamedParameter($data['end_date'] ?? $data['end']))
@@ -33,7 +33,7 @@ class HolidaysMapper extends QBMapper {
             ->where($qb->expr()->eq('holiday_id', $qb->createNamedParameter($data['id'])))
             ->execute();
         } else {
-            $qb->insert('stech_holidays')
+            $qb->insert('tm_holidays')
             ->values([
                 'holiday_name' => $qb->createNamedParameter($data['name']),
                 'holiday_start_date' => $qb->createNamedParameter($data['start_date'] ?? $data['start']),
@@ -47,7 +47,7 @@ class HolidaysMapper extends QBMapper {
     public function toggleHoliday(int $id): void {
         $qb = $this->db->getQueryBuilder();
         $row = $qb->select('holiday_archive')
-            ->from('stech_holidays')
+            ->from('tm_holidays')
             ->where($qb->expr()->eq('holiday_id', $qb->createNamedParameter($id)))
             ->executeQuery()
             ->fetch();
@@ -55,7 +55,7 @@ class HolidaysMapper extends QBMapper {
         if ($row) {
             $newStatus = ((int)$row['holiday_archive'] === 1) ? 0 : 1;
             $qbUpdate = $this->db->getQueryBuilder();
-            $qbUpdate->update('stech_holidays')
+            $qbUpdate->update('tm_holidays')
                 ->set('holiday_archive', $qbUpdate->createNamedParameter($newStatus))
                 ->where($qbUpdate->expr()->eq('holiday_id', $qbUpdate->createNamedParameter($id)))
                 ->execute();
@@ -64,7 +64,7 @@ class HolidaysMapper extends QBMapper {
 
     public function deleteHoliday(int $id): void {
         $qb = $this->db->getQueryBuilder();
-        $qb->delete('stech_holidays')
+        $qb->delete('tm_holidays')
            ->where($qb->expr()->eq('holiday_id', $qb->createNamedParameter($id)))
            ->execute();
     }

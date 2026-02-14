@@ -8,13 +8,13 @@ use OCP\IDBConnection;
 
 class PayrollMapper extends QBMapper {
     public function __construct(IDBConnection $db) {
-        parent::__construct($db, 'stech_admin_settings');
+        parent::__construct($db, 'tm_admin_settings');
     }
 
     public function getSettings(): array {
         return $this->db->getQueryBuilder()
             ->select('*')
-            ->from('stech_admin_settings')
+            ->from('tm_admin_settings')
             ->executeQuery()
             ->fetchAll();
     }
@@ -22,20 +22,20 @@ class PayrollMapper extends QBMapper {
     public function saveSetting(string $key, string $value): void {
         $qb = $this->db->getQueryBuilder();
         $exists = $qb->select('setting_key')
-                     ->from('stech_admin_settings')
+                     ->from('tm_admin_settings')
                      ->where($qb->expr()->eq('setting_key', $qb->createNamedParameter($key)))
                      ->executeQuery()
                      ->fetch();
 
         if ($exists) {
             $qb = $this->db->getQueryBuilder();
-            $qb->update('stech_admin_settings')
+            $qb->update('tm_admin_settings')
                ->set('setting_value', $qb->createNamedParameter($value))
                ->where($qb->expr()->eq('setting_key', $qb->createNamedParameter($key)))
                ->execute();
         } else {
             $qb = $this->db->getQueryBuilder();
-            $qb->insert('stech_admin_settings')
+            $qb->insert('tm_admin_settings')
                ->values([
                    'setting_key' => $qb->createNamedParameter($key),
                    'setting_value' => $qb->createNamedParameter($value)

@@ -68,7 +68,7 @@ function setupSidebarLinks() {
  * Handle persistent impersonation state
  */
 function handleImpersonation() {
-    const storedTarget = sessionStorage.getItem('stech_impersonate');
+    const storedTarget = sessionStorage.getItem('tm_impersonate');
     const urlParams = new URLSearchParams(window.location.search);
     const currentTarget = urlParams.get('target_user');
 
@@ -79,7 +79,7 @@ function handleImpersonation() {
     }
     
     document.getElementById('btn-end-impersonation')?.addEventListener('click', () => {
-        sessionStorage.removeItem('stech_impersonate');
+        sessionStorage.removeItem('tm_impersonate');
         const url = new URL(window.location.href);
         url.searchParams.delete('target_user');
         window.location.href = url.toString();

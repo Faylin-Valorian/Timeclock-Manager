@@ -9,13 +9,13 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 
 class EntryFormMapper extends QBMapper {
     public function __construct(IDBConnection $db) {
-        parent::__construct($db, 'stech_timesheets', Timesheet::class);
+        parent::__construct($db, 'tm_timesheets', Timesheet::class);
     }
 
     public function getTimesheetById(int $id, string $uid): ?array {
         $qb = $this->db->getQueryBuilder();
         $res = $qb->select('*')
-            ->from('stech_timesheets')
+            ->from('tm_timesheets')
             ->where($qb->expr()->eq('timesheet_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)))
             ->andWhere($qb->expr()->eq('userid', $qb->createNamedParameter($uid)))
             ->executeQuery()
@@ -26,7 +26,7 @@ class EntryFormMapper extends QBMapper {
     public function getActivitiesByTimesheet(int $id): array {
         $qb = $this->db->getQueryBuilder();
         return $qb->select('*')
-            ->from('stech_activity')
+            ->from('tm_activity')
             ->where($qb->expr()->eq('timesheet_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)))
             ->executeQuery()
             ->fetchAll();
@@ -35,18 +35,18 @@ class EntryFormMapper extends QBMapper {
     // Lookup Data
     public function getActiveJobs(): array {
         $qb = $this->db->getQueryBuilder();
-        return $qb->select('*')->from('stech_jobs')->where($qb->expr()->eq('job_archive', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))->orderBy('job_name', 'ASC')->executeQuery()->fetchAll();
+        return $qb->select('*')->from('tm_jobs')->where($qb->expr()->eq('job_archive', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))->orderBy('job_name', 'ASC')->executeQuery()->fetchAll();
     }
 
     public function getEnabledStates(): array {
         $qb = $this->db->getQueryBuilder();
-        return $qb->select('*')->from('stech_states')->where($qb->expr()->eq('is_enabled', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))->orderBy('state_name', 'ASC')->executeQuery()->fetchAll();
+        return $qb->select('*')->from('tm_states')->where($qb->expr()->eq('is_enabled', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))->orderBy('state_name', 'ASC')->executeQuery()->fetchAll();
     }
 
     public function getCountiesByState(string $stateAbbr): array {
         $qb = $this->db->getQueryBuilder();
-        $state = $qb->select('fips_code')->from('stech_states')->where($qb->expr()->eq('state_abbr', $qb->createNamedParameter($stateAbbr)))->executeQuery()->fetch();
+        $state = $qb->select('fips_code')->from('tm_states')->where($qb->expr()->eq('state_abbr', $qb->createNamedParameter($stateAbbr)))->executeQuery()->fetch();
         if (!$state) return [];
-        return $qb->select('*')->from('stech_counties')->where($qb->expr()->eq('state_fips', $qb->createNamedParameter($state['fips_code'])))->andWhere($qb->expr()->eq('is_enabled', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))->orderBy('county_name', 'ASC')->executeQuery()->fetchAll();
+        return $qb->select('*')->from('tm_counties')->where($qb->expr()->eq('state_fips', $qb->createNamedParameter($state['fips_code'])))->andWhere($qb->expr()->eq('is_enabled', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))->orderBy('county_name', 'ASC')->executeQuery()->fetchAll();
     }
 }
