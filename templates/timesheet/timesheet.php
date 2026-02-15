@@ -1,17 +1,4 @@
 <div id="timesheet-modal" class="modal-overlay" style="display: none;">
-    <datalist id="time-options">
-        <?php 
-        for($h=0; $h<24; $h++) {
-            foreach([0, 15, 30, 45] as $m) {
-                $time = sprintf("%02d:%02d", $h, $m);
-                // Format to AM/PM for display
-                $display = date("g:i A", strtotime($time)); 
-                echo "<option value=\"$display\">";
-            }
-        }
-        ?>
-    </datalist>
-
     <div class="modal-card">
         <form id="timesheet-form">
             <div class="modal-header">
@@ -32,11 +19,28 @@
                         
                         <div class="input-group">
                             <label>Time In</label>
-                            <input type="text" id="time-in" class="form-control smart-time" list="time-options" placeholder="e.g. 8:00 AM" autocomplete="off">
+                            <div class="time-widget-wrapper">
+                                <input type="text" id="time-in" class="form-control smart-time-input" placeholder="e.g. 8:00 AM" autocomplete="off">
+                                <div class="time-popover" style="display:none;">
+                                    <select class="time-select-h"><?php for($i=1;$i<=12;$i++) echo "<option>".sprintf("%02d",$i)."</option>"; ?></select>
+                                    <span class="colon">:</span>
+                                    <select class="time-select-m"><?php for($i=0;$i<60;$i++) echo "<option>".sprintf("%02d",$i)."</option>"; ?></select>
+                                    <select class="time-select-ampm"><option>AM</option><option>PM</option></select>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="input-group">
                             <label>Time Out</label>
-                            <input type="text" id="time-out" class="form-control smart-time" list="time-options" placeholder="e.g. 5:00 PM" autocomplete="off">
+                            <div class="time-widget-wrapper">
+                                <input type="text" id="time-out" class="form-control smart-time-input" placeholder="e.g. 5:00 PM" autocomplete="off">
+                                <div class="time-popover" style="display:none;">
+                                    <select class="time-select-h"><?php for($i=1;$i<=12;$i++) echo "<option>".sprintf("%02d",$i)."</option>"; ?></select>
+                                    <span class="colon">:</span>
+                                    <select class="time-select-m"><?php for($i=0;$i<60;$i++) echo "<option>".sprintf("%02d",$i)."</option>"; ?></select>
+                                    <select class="time-select-ampm"><option>AM</option><option>PM</option></select>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="input-group">

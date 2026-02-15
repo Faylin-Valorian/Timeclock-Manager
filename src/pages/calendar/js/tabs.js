@@ -1,28 +1,20 @@
 import { Sidebar } from 'src/components/sidebar/sidebar.js';
 import { CalendarModule } from './fullcalendar.js';
+import { TimesheetModule } from 'src/pages/timesheet/timesheet.js';
 
 export const TabsModule = {
-    /**
-     * Main Initialization
-     */
     init() {
-        // 1. Initialize shared sidebar logic (hides the active link based on data-mode)
         Sidebar.init();
-
-        // 2. Setup Calendar specific controls
         this.setupViewTabs();
         this.setupNavTabs();
         this.setupDateControls();
     },
 
-    /**
-     * Handles the Month / Week / Today buttons
-     */
     setupViewTabs() {
+        // 1. View Switching Buttons (Month, Week)
         const views = {
             'view-month': 'dayGridMonth',
-            'view-week': 'dayGridWeek',
-            'view-today': 'today'
+            'view-week': 'dayGridWeek'
         };
 
         Object.keys(views).forEach(id => {
@@ -32,33 +24,51 @@ export const TabsModule = {
                     const action = views[id];
                     const cal = window.TimeclockManager.CalendarInstance;
                     
-                    if (!cal) return;
-
-                    if (action === 'today') {
-                        cal.today();
-                    } else {
+                    if (cal) {
                         cal.changeView(action);
-                        
-                        // Update Active State Visuals
-                        document.querySelectorAll('.view-buttons button').forEach(b => {
-                            b.classList.remove('active');
-                            b.classList.remove('primary-button');
-                            b.classList.add('secondary-button');
-                        });
-                        
-                        // Set clicked button to active/primary
-                        e.target.classList.add('active');
-                        e.target.classList.remove('secondary-button');
-                        e.target.classList.add('primary-button');
+                        this.updateActiveButton(e.target);
                     }
                 });
             }
         });
+
+        // 2. Today Button Logic
+        // Navigates to today AND opens the Timesheet for the current date
+        const todayBtn = document.getElementById('view-today');
+        if (todayBtn) {
+            todayBtn.addEventListener('click', (e) => {
+                const cal = window.TimeclockManager.CalendarInstance;
+                if (cal) {
+                    cal.today(); // Move calendar view to current date
+                }
+
+                // Generate local YYYY-MM-DD string
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const todayStr = `${year}-${month}-${day}`;
+
+                // Open the modal
+                TimesheetModule.open(todayStr, null);
+            });
+        }
     },
 
-    /**
-     * Handles the sidebar navigation links (Calendar, Analysis, Admin)
-     */
+    updateActiveButton(target) {
+        // Reset all buttons to secondary style
+        document.querySelectorAll('.view-buttons button').forEach(b => {
+            b.classList.remove('active');
+            b.classList.remove('primary-button');
+            b.classList.add('secondary-button');
+        });
+        
+        // Set clicked button to primary style
+        target.classList.add('active');
+        target.classList.remove('secondary-button');
+        target.classList.add('primary-button');
+    },
+
     setupNavTabs() {
         const links = {
             'nav-link-calendar': '/',
@@ -73,11 +83,9 @@ export const TabsModule = {
                     e.preventDefault();
                     const route = links[id];
                     
-                    // Use Nextcloud's URL generator if available
                     if (window.OC && window.OC.generateUrl) {
                         window.location.href = window.OC.generateUrl('/apps/timeclock-manager' + route);
                     } else {
-                        // Fallback mostly for dev environments
                         window.location.href = '/index.php/apps/timeclock-manager' + route;
                     }
                 });
@@ -85,25 +93,14 @@ export const TabsModule = {
         });
     },
 
-    /**
-     * Handles the Date Navigation (< Prev, Next >, and Date Picker)
-     */
     setupDateControls() {
         const getCal = () => window.TimeclockManager.CalendarInstance;
 
-        // Previous Button
-        document.getElementById('nav-prev')?.addEventListener('click', () => {
-            const cal = getCal();
-            if (cal) cal.prev();
-        });
-
-        // Next Button
-        document.getElementById('nav-next')?.addEventListener('click', () => {
-            const cal = getCal();
-            if (cal) cal.next();
-        });
+        // Prev / Next Arrows
+        document.getElementById('nav-prev')?.addEventListener('click', () => getCal()?.prev());
+        document.getElementById('nav-next')?.addEventListener('click', () => getCal()?.next());
         
-        // Date Picker Input (Hidden month input)
+        // Hidden Date Picker Input
         const picker = document.getElementById('date-picker-input');
         if (picker) {
             picker.addEventListener('change', (e) => {
@@ -113,14 +110,14 @@ export const TabsModule = {
                 }
             });
             
-            // Allow clicking the text label ("February 2026") to open the picker
+            // Text Label Trigger
             const label = document.getElementById('current-date-label');
             if (label) {
                 label.addEventListener('click', () => {
                     if (picker.showPicker) {
-                        picker.showPicker(); // Modern browsers
+                        picker.showPicker();
                     } else {
-                        picker.focus(); // Fallback
+                        picker.focus();
                         picker.click();
                     }
                 });

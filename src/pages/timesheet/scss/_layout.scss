@@ -21,14 +21,12 @@
     background: var(--color-main-background); 
     color: var(--color-main-text);
     
-    /* [FIXED] Force 80% width relative to calendar container */
+    /* WIDTH: 80% of container */
     width: 80% !important; 
     max-width: none !important; 
     
-    /* [FIXED] Height & Scroll Logic */
-    height: 90%; 
-    max-height: 90%; 
-    
+    /* HEIGHT: Never exceed 90% of the screen height */
+    max-height: 90vh !important; 
     display: flex; 
     flex-direction: column; 
     
@@ -40,35 +38,24 @@
 /* ==========================================================================
    SECTIONS
    ========================================================================== */
-
 .modal-header, .modal-footer {
-    flex-shrink: 0; /* Never shrink these */
+    flex-shrink: 0; 
     padding: 15px 25px; 
     background: var(--color-background-hover);
     border-color: var(--color-border);
 }
 
-.modal-header { 
-    border-bottom: 1px solid var(--color-border); 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-}
-
-.modal-footer { 
-    border-top: 1px solid var(--color-border); 
-    display: flex; 
-    justify-content: flex-end; 
-    gap: 10px; 
-}
+.modal-header { border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+.modal-footer { border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 10px; }
 
 .modal-body { 
     padding: 25px; 
     
-    /* [FIXED] Scroll Logic */
+    /* SCROLL LOGIC */
     overflow-y: auto; 
-    flex-grow: 1; 
-    min-height: 0; /* Critical for flex scrolling */
+    flex: 1 1 auto; /* Grow and Shrink */
+    min-height: 0;  /* Critical for Firefox/Flexbox */
     
+    /* Visuals */
     display: block; 
 }
