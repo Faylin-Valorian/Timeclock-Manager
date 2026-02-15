@@ -1,0 +1,56 @@
+/* ==========================================================================
+   CUSTOM WIDGETS
+   ========================================================================== */
+
+/* Dynamic Work Rows */
+.work-row { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 10px; 
+    align-items: center; 
+}
+
+/* Buttons & Icons */
+.text-button {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+}
+.text-button:hover { text-decoration: underline; }
+
+/* [UPDATED] Slimmer Add Item Button */
+#btn-add-row {
+    padding: 4px 12px;
+    font-size: 13px;
+    height: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    background: var(--color-background-dark);
+    color: var(--color-main-text);
+    text-decoration: none;
+    display: inline-block;
+}
+#btn-add-row:hover {
+    background: var(--color-background-hover);
+    text-decoration: none;
+}
+
+.action-icon { 
+    background: none; 
+    border: none; 
+    font-size: 20px; 
+    cursor: pointer; 
+    color: var(--color-text-maxcontrast); 
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+}
+.action-icon:hover { opacity: 1; background: var(--color-background-hover); border-radius: 50%; }
+.action-icon[style*="color:red"]:hover { color: #d32f2f !important; background: rgba(211, 47, 47, 0.1); }

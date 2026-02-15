@@ -1,0 +1,74 @@
+/* ==========================================================================
+   MODAL CONTAINER
+   ========================================================================== */
+.modal-overlay {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    
+    border-radius: var(--border-radius-large); 
+    background-color: rgba(0, 0, 0, 0.6); 
+    backdrop-filter: blur(2px);
+    z-index: 1000; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+.modal-card {
+    background: var(--color-main-background); 
+    color: var(--color-main-text);
+    
+    /* [FIXED] Force 80% width relative to calendar container */
+    width: 80% !important; 
+    max-width: none !important; 
+    
+    /* [FIXED] Height & Scroll Logic */
+    height: 90%; 
+    max-height: 90%; 
+    
+    display: flex; 
+    flex-direction: column; 
+    
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden; 
+}
+
+/* ==========================================================================
+   SECTIONS
+   ========================================================================== */
+
+.modal-header, .modal-footer {
+    flex-shrink: 0; /* Never shrink these */
+    padding: 15px 25px; 
+    background: var(--color-background-hover);
+    border-color: var(--color-border);
+}
+
+.modal-header { 
+    border-bottom: 1px solid var(--color-border); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.modal-footer { 
+    border-top: 1px solid var(--color-border); 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 10px; 
+}
+
+.modal-body { 
+    padding: 25px; 
+    
+    /* [FIXED] Scroll Logic */
+    overflow-y: auto; 
+    flex-grow: 1; 
+    min-height: 0; /* Critical for flex scrolling */
+    
+    display: block; 
+}

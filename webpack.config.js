@@ -8,15 +8,21 @@ module.exports = {
 
     // 1. Entry Points
     entry: {
-        // ADMIN PANEL
-        admin: [
-            path.join(__dirname, 'src', 'pages', 'admin', 'admin.js'),
-            path.join(__dirname, 'src', 'pages', 'admin', 'admin.scss')
+        // [UPDATED] Sidebar: Include JS + SCSS
+        sidebar: [
+            path.join(__dirname, 'src', 'components', 'sidebar', 'sidebar.js'), // Add this
+            path.join(__dirname, 'src', 'components', 'sidebar', 'sidebar.scss')
         ],
-        
-        // TIMESHEET (New Modular Entry)
+
+        // Calendar: Already correct (Has JS + SCSS)
+        calendar: [
+            path.join(__dirname, 'src', 'pages', 'calendar', 'calendar.js'),
+            path.join(__dirname, 'src', 'pages', 'calendar', 'calendar.scss')
+        ],
+
+        // [UPDATED] Timesheet: Include JS + SCSS
         timesheet: [
-            path.join(__dirname, 'src', 'pages', 'timesheet', 'timesheet.js'),
+            path.join(__dirname, 'src', 'pages', 'timesheet', 'timesheet.js'), // Add this
             path.join(__dirname, 'src', 'pages', 'timesheet', 'timesheet.scss')
         ]
     },
@@ -24,7 +30,7 @@ module.exports = {
     // 2. Output
     output: {
         path: path.resolve(__dirname, 'js'),
-        filename: '[name].js', // Will produce admin.js and timesheet.js
+        filename: '[name].js', 
         chunkFilename: 'chunks/[name]-[chunkhash].js',
         clean: true
     },
@@ -76,7 +82,7 @@ module.exports = {
         }),
         
         new MiniCssExtractPlugin({
-            filename: "../css/[name].css", // Will produce admin.css and timesheet.css
+            filename: "../css/[name].css", // produces sidebar.css, calendar.css, timesheet.css
         }),
     ],
 
@@ -84,7 +90,7 @@ module.exports = {
     resolve: {
         extensions: ['.js', '.json', '.scss', '.css'],
         alias: {
-            'src': path.resolve(__dirname, 'src/'), // Allows "import ... from 'src/...'"
+            'src': path.resolve(__dirname, 'src/'), 
             'process/browser': require.resolve('process/browser.js'), 
         },
         fallback: {

@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <info>
-    <id>timeclock-manager</id> 
+    <id>timeclock-manager</id>
     <name>Timeclock Manager</name>
-    <summary>A modular time tracking and management system.</summary>
-    <description>Manage employee time, payroll, holidays, and job codes with a modular design.</description>
-    <version>0.2.9</version>
+    <summary>Modular time tracking system.</summary>
+    <description>Manage employee time, payroll, and holidays.</description>
+    <version>2.1.0</version>
     <licence>agpl</licence>
-    <author>Faylin Valorian</author>
-    <namespace>TimeclockManager</namespace> <category>organization</category>
+    <author>Dakota Chandler</author>
+    <namespace>TimeclockManager</namespace>
+    <category>organization</category>
     <dependencies>
         <nextcloud min-version="28" max-version="33"/>
     </dependencies>

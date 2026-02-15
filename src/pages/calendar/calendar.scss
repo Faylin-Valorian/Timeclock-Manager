@@ -1,0 +1,8 @@
+// 1. Sidebar Styles (External File)
+// Loaded via PHP: Util::addStyle('timeclock-manager', 'sidebar');
+
+// 2. Calendar Modules (Using @use)
+@use 'scss/layout';
+@use 'scss/overrides';
+@use 'scss/tabs';
+@use 'scss/responsive';
