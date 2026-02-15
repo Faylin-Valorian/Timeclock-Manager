@@ -4,7 +4,7 @@
     <name>Timeclock Manager</name>
     <summary>Modular time tracking system.</summary>
     <description>Manage employee time, payroll, and holidays.</description>
-    <version>2.1.5</version>
+    <version>2.1.7</version>
     <licence>agpl</licence>
     <author>Dakota Chandler</author>
     <namespace>TimeclockManager</namespace>

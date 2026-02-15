@@ -3,13 +3,24 @@
    ========================================================================== */
 .form-section { margin-bottom: 20px; }
 
-/* 4-Column Grid (Date, In, Out, Break) */
+/* [NEW] Date Row (Standalone Top Row) */
+.form-row-date {
+    display: flex;
+    width: 100%;
+    margin-bottom: 15px;
+}
+.form-row-date .input-group {
+    width: 200px; /* Constrain width so it doesn't look stretched */
+}
+
+/* [UPDATED] 4-Column Row (In, Out, Break, Total) */
+/* Grid: 1fr (In), 1fr (Out), 0.5fr (Break), 0.5fr (Total) */
 .form-row-4 {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 0.5fr; 
+    grid-template-columns: 1fr 1fr 0.5fr 0.5fr; 
     gap: 15px;
     align-items: end;
-    width: 100%; /* Ensure grid fills container */
+    width: 100%;
 }
 
 /* 3-Column Grid (State, County, Miles) */
@@ -21,16 +32,13 @@
     width: 100%;
 }
 
-/* 1-Column Row (Total Hours) - Left Aligned */
+/* 1-Column Row (Generic) */
 .form-row-1 {
     display: flex;
     justify-content: flex-start !important; 
     width: 100%;
     margin-top: 10px;
 }
-
-/* Constrain the Total Hours input width */
-.form-row-1 .input-group { width: 200px; }
 
 /* ==========================================================================
    INPUTS & GROUPS
@@ -46,7 +54,7 @@
     padding: 8px 10px;
     font-size: 14px;
     width: 100%;
-    box-sizing: border-box; /* Critical for grid sizing */
+    box-sizing: border-box;
 }
 .form-control:focus { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 2px var(--color-primary-light); }
 .form-control[readonly] { background-color: var(--color-background-dark); opacity: 0.8; cursor: default; }
@@ -54,26 +62,19 @@ textarea.form-control { resize: vertical; min-height: 60px; }
 .form-separator { height: 1px; background-color: var(--color-border); margin: 20px 0; width: 100%; }
 
 /* ==========================================================================
-   BUTTON TOGGLES (Vacation, Travel, Per Diem, etc.)
+   BUTTON TOGGLES
    ========================================================================== */
-
-/* Container for the top-level buttons (PTO, Travel) */
 .toggle-row-container {
     display: flex;
-    width: 100%; /* Fill the 80% modal width */
-    gap: 15px;   /* Space between buttons */
+    width: 100%;
+    gap: 15px;
     margin-bottom: 15px;
 }
+.toggle-row-container .toggle-wrapper { flex: 1; }
 
-/* Force the wrapper to take 50% space each */
-.toggle-row-container .toggle-wrapper {
-    flex: 1; 
-}
-
-/* Grid for the inner Travel Options (Per Diem, etc.) */
 .travel-toggles-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 Columns */
+    grid-template-columns: repeat(4, 1fr);
     gap: 15px;
     padding: 15px;
     background: var(--color-background-dark); 
@@ -84,48 +85,18 @@ textarea.form-control { resize: vertical; min-height: 60px; }
     box-sizing: border-box;
 }
 
-/* THE BUTTON TOGGLE STYLE */
-.toggle-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-/* Hide the actual checkbox */
-.toggle-wrapper input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-}
-
-/* Style the Label to look like a Button */
+.toggle-wrapper { position: relative; width: 100%; }
+.toggle-wrapper input[type="checkbox"] { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
 .toggle-wrapper label {
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Center text */
-    gap: 8px;
-    
-    width: 100%;
-    padding: 10px 15px;
-    
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 10px 15px;
     background-color: var(--color-main-background);
     border: 1px solid var(--color-border);
-    border-radius: 20px; /* Pill Shape */
-    
-    font-weight: bold;
-    color: var(--color-text-maxcontrast);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-    box-sizing: border-box;
+    border-radius: 20px;
+    font-weight: bold; color: var(--color-text-maxcontrast);
+    cursor: pointer; transition: all 0.2s ease; user-select: none; box-sizing: border-box;
 }
-
-.toggle-wrapper label:hover {
-    background-color: var(--color-background-hover);
-}
-
-/* CHECKED STATE: Blue & Bright */
+.toggle-wrapper label:hover { background-color: var(--color-background-hover); }
 .toggle-wrapper input[type="checkbox"]:checked + label {
     background-color: var(--color-primary); 
     color: #ffffff;

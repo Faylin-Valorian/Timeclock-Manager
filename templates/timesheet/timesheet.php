@@ -24,12 +24,14 @@
 
             <div class="modal-body">
                 <div class="form-section">
-                    <div class="form-row-4">
+                    <div class="form-row-date">
                         <div class="input-group">
                             <label>Date</label>
                             <input type="date" id="timesheet-date" name="date" class="form-control" readonly>
                         </div>
-                        
+                    </div>
+
+                    <div class="form-row-4">
                         <div class="input-group">
                             <label>Time In</label>
                             <div class="time-widget-wrapper">
@@ -60,12 +62,10 @@
                             <label>Break (min)</label>
                             <input type="number" id="break-min" class="form-control" value="0">
                         </div>
-                    </div>
 
-                    <div class="form-row-1">
                         <div class="input-group">
                             <label>Total Hours</label>
-                            <input type="text" id="total-hours" class="form-control" readonly style="font-weight: bold; text-align: left;">
+                            <input type="text" id="total-hours" class="form-control" readonly style="font-weight: bold; background: var(--color-background-dark); color: var(--color-main-text);">
                         </div>
                     </div>
                 </div>
