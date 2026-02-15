@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* ==========================================================================
    MODAL CONTAINER
    ========================================================================== */
@@ -58,4 +59,66 @@
     
     /* Visuals */
     display: block; 
+=======
+/* ==========================================================================
+   MODAL CONTAINER
+   ========================================================================== */
+.modal-overlay {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    
+    border-radius: var(--border-radius-large); 
+    background-color: rgba(0, 0, 0, 0.6); 
+    backdrop-filter: blur(2px);
+    z-index: 1000; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+.modal-card {
+    background: var(--color-main-background); 
+    color: var(--color-main-text);
+    
+    /* WIDTH: 80% of container */
+    width: 80% !important; 
+    max-width: none !important; 
+    
+    /* HEIGHT: Never exceed 90% of the screen height */
+    max-height: 90vh !important; 
+    display: flex; 
+    flex-direction: column; 
+    
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden; 
+}
+
+/* ==========================================================================
+   SECTIONS
+   ========================================================================== */
+.modal-header, .modal-footer {
+    flex-shrink: 0; 
+    padding: 15px 25px; 
+    background: var(--color-background-hover);
+    border-color: var(--color-border);
+}
+
+.modal-header { border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+.modal-footer { border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 10px; }
+
+.modal-body { 
+    padding: 25px; 
+    
+    /* SCROLL LOGIC */
+    overflow-y: auto; 
+    flex: 1 1 auto; /* Grow and Shrink */
+    min-height: 0;  /* Critical for Firefox/Flexbox */
+    
+    /* Visuals */
+    display: block; 
+>>>>>>> 6edf4541514ac05df3faedfa2f961d65a5495869
 }

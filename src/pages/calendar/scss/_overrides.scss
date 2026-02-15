@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* ==========================================================================
    FULLCALENDAR INTERNALS (Force Expansion)
    ========================================================================== */
@@ -116,4 +117,124 @@
 /* Background Events (Holidays) */
 .fc-bg-event {
     opacity: 1 !important;
+=======
+/* ==========================================================================
+   FULLCALENDAR INTERNALS (Force Expansion)
+   ========================================================================== */
+
+.fc {
+    height: 100% !important;
+    width: 100% !important;
+    display: flex;
+    flex-direction: column;
+    color: var(--color-main-text);
+}
+
+.fc-license-message { display: none; }
+
+/* The internal view container must expand */
+.fc-view-harness {
+    flex-grow: 1;
+    height: 100% !important;
+    min-height: 0;
+}
+
+/* Ensure the scrollable area works */
+.fc-scroller {
+    height: 100% !important;
+    overflow-y: auto;
+}
+
+/* Ensure the grid table takes up space */
+.fc-scrollgrid {
+    height: 100% !important;
+    border-collapse: collapse;
+}
+
+/* ==========================================================================
+   THEME OVERRIDES
+   ========================================================================== */
+
+.fc-theme-standard td, 
+.fc-theme-standard th {
+    border-color: var(--color-border);
+}
+
+.fc-col-header-cell-cushion, 
+.fc-daygrid-day-number {
+    color: var(--color-main-text);
+    text-decoration: none;
+}
+
+/* Highlight "Today" Cell */
+.fc .fc-day-today {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Anti-Glow Fixes */
+.fc table tr:hover,
+.fc .fc-scrollgrid tr:hover,
+.fc .fc-row:hover {
+    background: transparent !important;
+}
+.fc-view-harness:focus, .fc:focus {
+    outline: none !important;
+}
+
+/* Interactive: Highlight Day on Hover */
+.fc .fc-daygrid-day:hover {
+    background-color: var(--color-background-hover) !important;
+    cursor: pointer;
+    transition: background-color 0.1s ease-in-out;
+}
+
+/* ==========================================================================
+   EVENT STYLING
+   ========================================================================== */
+
+.fc-event, 
+.fc-event-main {
+    cursor: pointer !important;
+    transition: transform 0.1s, filter 0.1s;
+    opacity: 1 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.fc-event:hover {
+    filter: brightness(1.1) !important;
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 100 !important;
+}
+
+.fc-event-content-box {
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 0.85em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    opacity: 1 !important;
+    font-weight: 600;
+}
+
+/* Day Number Positioning */
+.fc-daygrid-day-top {
+    z-index: 5;
+    position: relative;
+    padding-left: 4px;
+    padding-top: 2px;
+}
+
+/* Safe Zone for Events */
+.fc-daygrid-day-events {
+    margin-top: 28px !important;
+    margin-bottom: 2px;
+}
+
+/* Background Events (Holidays) */
+.fc-bg-event {
+    opacity: 1 !important;
+>>>>>>> 6edf4541514ac05df3faedfa2f961d65a5495869
 }

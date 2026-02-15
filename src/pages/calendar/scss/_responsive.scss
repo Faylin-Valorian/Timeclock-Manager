@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */
@@ -25,4 +26,33 @@
     .fc-view {
         font-size: 0.85em; 
     }
+=======
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media only screen and (max-width: 1000px) {
+    #app {
+        flex-direction: column;
+    }
+    #app-navigation {
+        width: 100%;
+        height: auto;
+        flex-shrink: 0;
+    }
+    #calendar-container {
+        min-width: 0 !important;
+        padding-bottom: 20px;
+        margin-right: 0;
+        height: 80vh; /* Explicit height fallback for mobile */
+    }
+    .fc-header-toolbar {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 1.5em !important;
+    }
+    .fc-view {
+        font-size: 0.85em; 
+    }
+>>>>>>> 6edf4541514ac05df3faedfa2f961d65a5495869
 }

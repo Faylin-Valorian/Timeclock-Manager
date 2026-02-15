@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* ==========================================================================
    CRITICAL HEIGHT CHAIN
    (Required for FullCalendar to calculate 100% height correctly)
@@ -77,4 +78,85 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+=======
+/* ==========================================================================
+   CRITICAL HEIGHT CHAIN
+   (Required for FullCalendar to calculate 100% height correctly)
+   ========================================================================== */
+
+:root, html, body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent double scrollbars */
+}
+
+#app {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* Main Content Area */
+#app-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    min-height: 0; /* Critical for Flexbox nesting */
+}
+
+#app-content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   CALENDAR CONTAINER
+   ========================================================================== */
+
+#calendar-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0; 
+    width: 100%;
+    min-width: 800px; /* Prevent squishing on desktop */
+    
+    background: var(--color-main-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 0 10px var(--color-box-shadow);
+    padding: 15px;
+    padding-bottom: 50px; 
+    box-sizing: border-box;
+    position: relative;
+    margin-right: 10px;
+
+    /* Anti-Glow Hover Fix */
+    &:hover {
+        background: var(--color-main-background) !important;
+        box-shadow: 0 0 10px var(--color-box-shadow) !important;
+        border-color: transparent !important;
+    }
+}
+
+/* The Calendar Instance Element */
+#calendar {
+    flex-grow: 1;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+>>>>>>> 6edf4541514ac05df3faedfa2f961d65a5495869
 }
