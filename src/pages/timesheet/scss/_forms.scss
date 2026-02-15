@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* ==========================================================================
    FORM LAYOUT & INPUTS
    ========================================================================== */
@@ -64,71 +63,4 @@
     background: var(--color-background-dark);
     opacity: 0.7;
     cursor: default;
-=======
-/* ==========================================================================
-   FORM LAYOUT & INPUTS
-   ========================================================================== */
-
-.form-section { 
-    margin-bottom: 20px; 
-}
-
-.form-separator {
-    height: 1px;
-    background: var(--color-border);
-    margin: 20px 0;
-    opacity: 0.5;
-}
-
-/* Grid Layouts */
-.form-row-4 { 
-    display: grid; 
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 15px; 
-    align-items: end; 
-}
-
-.form-row-3 { 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 15px; 
-    align-items: end;
-}
-
-.form-row-1 {
-    display: flex;
-    justify-content: flex-end;
-}
-
-/* Input Styling */
-.input-group label { 
-    display: block; 
-    font-size: 12px; 
-    font-weight: bold; 
-    margin-bottom: 5px; 
-    opacity: 0.8; 
-}
-
-.form-control { 
-    width: 100%; 
-    padding: 8px; 
-    border: 1px solid var(--color-border); 
-    background: var(--color-main-background); 
-    color: var(--color-main-text); 
-    border-radius: var(--border-radius); 
-    box-sizing: border-box; 
-    font-size: 14px;
-}
-
-.form-control:focus {
-    border-color: var(--color-primary-element);
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-primary-element-light);
-}
-
-.form-control[readonly] {
-    background: var(--color-background-dark);
-    opacity: 0.7;
-    cursor: default;
->>>>>>> 6edf4541514ac05df3faedfa2f961d65a5495869
 }
