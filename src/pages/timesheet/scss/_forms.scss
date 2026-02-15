@@ -1,66 +1,127 @@
 /* ==========================================================================
-   FORM LAYOUT & INPUTS
+   FORM LAYOUT GRID
    ========================================================================== */
 
-.form-section { 
-    margin-bottom: 20px; 
+.form-section {
+    margin-bottom: 20px;
 }
 
-.form-separator {
-    height: 1px;
-    background: var(--color-border);
-    margin: 20px 0;
-    opacity: 0.5;
-}
-
-/* Grid Layouts */
-.form-row-4 { 
-    display: grid; 
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 15px; 
-    align-items: end; 
-}
-
-.form-row-3 { 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 15px; 
+/* Row with 4 columns (Date, In, Out, Break) */
+.form-row-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 0.5fr; /* Break is smaller */
+    gap: 15px;
     align-items: end;
 }
 
+/* Row with 3 columns (State, County, Miles) */
+.form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+/* [UPDATED] Row with 1 column (Total Hours) */
+/* Changed justify-content to flex-start to align Total Hours to the LEFT */
 .form-row-1 {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start; 
+    width: 100%;
+    margin-top: 10px;
 }
 
-/* Input Styling */
-.input-group label { 
-    display: block; 
-    font-size: 12px; 
-    font-weight: bold; 
-    margin-bottom: 5px; 
-    opacity: 0.8; 
+/* ==========================================================================
+   INPUT GROUPS
+   ========================================================================== */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-.form-control { 
-    width: 100%; 
-    padding: 8px; 
-    border: 1px solid var(--color-border); 
-    background: var(--color-main-background); 
-    color: var(--color-main-text); 
-    border-radius: var(--border-radius); 
-    box-sizing: border-box; 
+.input-group label {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--color-text-maxcontrast);
+    margin-left: 2px;
+}
+
+/* Standard Inputs */
+.form-control {
+    background-color: var(--color-main-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-main-text);
+    padding: 8px 10px;
     font-size: 14px;
+    width: 100%;
+    box-sizing: border-box; /* Critical for grid layout */
 }
 
 .form-control:focus {
-    border-color: var(--color-primary-element);
+    border-color: var(--color-primary);
     outline: none;
-    box-shadow: 0 0 0 2px var(--color-primary-element-light);
+    box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
+/* Readonly Inputs (Total Hours, Date) */
 .form-control[readonly] {
-    background: var(--color-background-dark);
-    opacity: 0.7;
+    background-color: var(--color-background-dark);
+    opacity: 0.8;
     cursor: default;
+}
+
+/* Textarea resizing */
+textarea.form-control {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* ==========================================================================
+   SEPARATORS
+   ========================================================================== */
+.form-separator {
+    height: 1px;
+    background-color: var(--color-border);
+    margin: 20px 0;
+    width: 100%;
+}
+
+/* ==========================================================================
+   TRAVEL SECTION TOGGLES
+   ========================================================================== */
+.toggle-row-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.travel-toggles-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    background: var(--color-background-dark);
+    padding: 10px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    border: 1px solid var(--color-border);
+}
+
+.toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.toggle-wrapper label {
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+}
+
+/* Hidden Section Animation */
+.hidden-section {
+    display: none !important;
 }

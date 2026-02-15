@@ -21,12 +21,15 @@
     background: var(--color-main-background); 
     color: var(--color-main-text);
     
-    /* WIDTH: 80% of container */
+    /* Dimensions */
     width: 80% !important; 
     max-width: none !important; 
     
-    /* HEIGHT: Never exceed 90% of the screen height */
-    max-height: 90vh !important; 
+    /* [FIX] Use Viewport Height so it never exceeds screen size */
+    height: 90vh; 
+    max-height: 90vh; 
+    
+    /* Layout */
     display: flex; 
     flex-direction: column; 
     
@@ -35,27 +38,45 @@
     overflow: hidden; 
 }
 
+/* [NEW] The Form must be a flex container to handle the scroll area */
+#timesheet-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden; /* Prevent the form itself from overflowing */
+}
+
 /* ==========================================================================
    SECTIONS
    ========================================================================== */
 .modal-header, .modal-footer {
-    flex-shrink: 0; 
+    flex-shrink: 0; /* Never shrink headers/footers */
     padding: 15px 25px; 
     background: var(--color-background-hover);
     border-color: var(--color-border);
 }
 
-.modal-header { border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
-.modal-footer { border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 10px; }
+.modal-header { 
+    border-bottom: 1px solid var(--color-border); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.modal-footer { 
+    border-top: 1px solid var(--color-border); 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 10px; 
+}
 
 .modal-body { 
     padding: 25px; 
     
-    /* SCROLL LOGIC */
+    /* [CRITICAL SCROLL FIX] */
     overflow-y: auto; 
-    flex: 1 1 auto; /* Grow and Shrink */
-    min-height: 0;  /* Critical for Firefox/Flexbox */
+    flex-grow: 1; 
+    min-height: 0; /* Firefox flexbox scroll fix */
     
-    /* Visuals */
     display: block; 
 }

@@ -1,11 +1,13 @@
+import { TimesheetAPI } from './api.js';
+
 export const TimesheetForm = {
     init() {
         this.setupHybridTimeWidgets();
         this.setupTravelToggle();
         this.setupCalculations();
+        this.setupLocationLogic(); // [NEW] County Lookup
     },
 
-    // ... (Keep existing showModal, hideModal, setTitle, setDate, toggleDeleteButton, reset, populateStateDatalist) ...
     showModal() { document.getElementById('timesheet-modal').style.display = 'flex'; },
     hideModal() { document.getElementById('timesheet-modal').style.display = 'none'; },
     setTitle(title) { document.getElementById('modal-date-title').innerText = title; },
@@ -14,23 +16,12 @@ export const TimesheetForm = {
         const btn = document.getElementById('btn-delete');
         if (btn) btn.style.display = show ? 'block' : 'none'; 
     },
-    populateStateDatalist(states) {
-        const dl = document.getElementById('state-options');
-        if (dl) {
-            dl.innerHTML = '';
-            states.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.state_abbr;
-                opt.label = s.state_name;
-                dl.appendChild(opt);
-            });
-        }
-    },
 
     reset() {
         document.getElementById('timesheet-form').reset();
         document.getElementById('total-hours').value = "0.00";
         document.getElementById('travel-fields-container').classList.add('hidden-section');
+        
         // Reset widgets
         document.querySelectorAll('.time-widget-wrapper').forEach(w => {
             w.querySelector('input').value = '';
@@ -38,6 +29,9 @@ export const TimesheetForm = {
             w.querySelector('.time-select-m').value = '00';
             w.querySelector('.time-select-ampm').value = 'AM';
         });
+        
+        // Clear county options on reset
+        this.populateCountyDatalist([]);
     },
 
     populate(data) {
@@ -57,6 +51,13 @@ export const TimesheetForm = {
         document.getElementById('travel-county').value = data.travel_county || '';
         document.getElementById('travel-miles').value = data.travel_miles || 0;
         document.getElementById('travel-extra-expense').value = data.travel_extra_expenses || 0;
+
+        // If state exists, trigger county load (optional, but good for UX)
+        if (data.travel_state) {
+            TimesheetAPI.getCounties(data.travel_state).then(counties => {
+                this.populateCountyDatalist(counties);
+            });
+        }
 
         const hasTravel = data.travel_state || data.travel_miles > 0 || data.travel_per_diem == 1;
         document.getElementById('toggle-travel').checked = hasTravel;
@@ -82,6 +83,58 @@ export const TimesheetForm = {
         };
     },
 
+    // --- LOCATION LOGIC ---
+
+    setupLocationLogic() {
+        const stateInput = document.getElementById('travel-state');
+        if (stateInput) {
+            stateInput.addEventListener('change', async (e) => {
+                const abbr = e.target.value;
+                if (abbr && abbr.length === 2) {
+                    const counties = await TimesheetAPI.getCounties(abbr);
+                    this.populateCountyDatalist(counties);
+                } else {
+                    this.populateCountyDatalist([]);
+                }
+            });
+            
+            // Allow triggering on blur for typed inputs
+            stateInput.addEventListener('blur', async (e) => {
+                const abbr = e.target.value;
+                 if (abbr && abbr.length === 2) {
+                    const counties = await TimesheetAPI.getCounties(abbr);
+                    this.populateCountyDatalist(counties);
+                }
+            });
+        }
+    },
+
+    populateStateDatalist(states) {
+        const dl = document.getElementById('state-options');
+        if (dl) {
+            dl.innerHTML = '';
+            states.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.state_abbr;
+                opt.label = s.state_name;
+                dl.appendChild(opt);
+            });
+        }
+    },
+
+    populateCountyDatalist(counties) {
+        const dl = document.getElementById('county-options');
+        if (dl) {
+            dl.innerHTML = '';
+            counties.forEach(c => {
+                const opt = document.createElement('option');
+                // Adjust this based on your API response structure (e.g. c.name or just c)
+                opt.value = c.county_name || c.name || c; 
+                dl.appendChild(opt);
+            });
+        }
+    },
+
     // --- HYBRID WIDGET LOGIC ---
 
     setupHybridTimeWidgets() {
@@ -94,9 +147,8 @@ export const TimesheetForm = {
                 ampm: wrapper.querySelector('.time-select-ampm')
             };
 
-            // 1. Show Popover on Focus/Click
+            // 1. Show Popover
             const show = () => {
-                // Hide other popovers
                 document.querySelectorAll('.time-popover').forEach(el => el.style.display = 'none');
                 popover.style.display = 'flex';
             };
@@ -104,7 +156,7 @@ export const TimesheetForm = {
             input.addEventListener('focus', show);
             input.addEventListener('click', show);
 
-            // 2. Hide Popover when clicking outside
+            // 2. Hide Popover
             document.addEventListener('click', (e) => {
                 if (!wrapper.contains(e.target)) {
                     popover.style.display = 'none';
@@ -124,14 +176,13 @@ export const TimesheetForm = {
             selects.m.addEventListener('change', updateInput);
             selects.ampm.addEventListener('change', updateInput);
 
-            // 4. Sync Input -> Selects (Smart Parsing)
+            // 4. Sync Input -> Selects
             input.addEventListener('blur', (e) => {
                 const formatted = this.formatUserInput(e.target.value);
                 if (formatted) {
                     input.value = formatted;
                     this.calculateTotal();
                     
-                    // Update selects to match text
                     const match = formatted.match(/(\d{2}):(\d{2})\s(AM|PM)/);
                     if (match) {
                         selects.h.value = match[1];
@@ -168,7 +219,6 @@ export const TimesheetForm = {
         const formatted = `${h.toString().padStart(2,'0')}:${m} ${ampm}`;
         input.value = formatted;
 
-        // Sync dropdowns
         const wrapper = input.closest('.time-widget-wrapper');
         if (wrapper) {
             wrapper.querySelector('.time-select-h').value = h.toString().padStart(2,'0');
@@ -194,7 +244,7 @@ export const TimesheetForm = {
 
         let ampm = 'AM';
         if (suffix && suffix.startsWith('p')) ampm = 'PM';
-        else if (h === 12 && !suffix) ampm = 'PM'; // Bias 12 to 12PM
+        else if (h === 12 && !suffix) ampm = 'PM'; 
 
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
     },
