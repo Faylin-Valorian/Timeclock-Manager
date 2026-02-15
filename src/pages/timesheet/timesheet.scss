@@ -1,11 +1,5 @@
-/* 1. Global Layout */
-@import 'styles/layout';
-
-/* 2. Global Components */
-@import '../../components/sidebar/sidebar';
-
-/* 3. Page Modules */
-@import 'modules/calendar/calendar';
-@import 'modules/entryform/entryform'; /* [UPDATED] Path */
-@import 'modules/widgets/time-widget';
-@import 'modules/ui/dialogs';
+@use 'scss/layout';
+@use 'scss/forms';
+@use 'scss/widgets';
+@use 'scss/travel';
+@use 'scss/responsive';

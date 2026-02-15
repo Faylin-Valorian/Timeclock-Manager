@@ -1,0 +1,59 @@
+/* ==========================================================================
+   HYBRID TIME WIDGET
+   ========================================================================== */
+.time-widget-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.time-popover {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: var(--color-main-background);
+    border: 1px solid var(--color-primary-element);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 500;
+    
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    gap: 2px;
+}
+
+.time-popover select {
+    flex-grow: 1;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-background-dark);
+    color: var(--color-main-text);
+    padding: 2px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.time-popover .colon {
+    font-weight: bold;
+    padding: 0 2px;
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+#btn-add-row {
+    padding: 4px 12px;
+    font-size: 13px;
+    height: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    background: var(--color-background-dark);
+    color: var(--color-main-text);
+    text-decoration: none;
+    display: inline-block;
+}
+#btn-add-row:hover {
+    background: var(--color-background-hover);
+}

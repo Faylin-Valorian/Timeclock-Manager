@@ -1,120 +1,124 @@
-import { generateUrl } from '@nextcloud/router';
-import { StechAPI } from 'src/api/api.js';
-import { Calendar } from './modules/calendar/calendar.js';
-// [IMPORTANT] Import EntryForm correctly
-import { EntryForm } from './modules/entryform/entryform.js'; 
-import { TimeSplitWidget } from './modules/widgets/time-widget.js';
-// [IMPORTANT] Update path to rows.js (it is now in entryform/)
-import { ActivityRows } from './modules/entryform/rows.js';
+import { TimesheetAPI } from './js/api.js';
+import { TimesheetForm } from './js/form.js';
+import { RowManager } from './js/manager.js';
 
-// Global Namespace Setup
-window.StechTimesheet = window.StechTimesheet || {};
-window.StechTimesheet.API = StechAPI;
-// [IMPORTANT] Register EntryForm globally so Calendar can access it
-window.StechTimesheet.EntryForm = EntryForm; 
-window.StechTimesheet.Calendar = Calendar;
-window.StechTimesheet.ActivityRows = ActivityRows;
-window.StechTimesheet.state = {
-    jobs: [],
-    stateMap: {},
-    stateMapRev: {}
-};
+export const TimesheetModule = {
+    currentId: null,
 
-document.addEventListener('DOMContentLoaded', async () => {
-    
-    // 1. Handle Impersonation (Persistent Logic)
-    handleImpersonation();
+    init() {
+        // 1. Initialize Components
+        RowManager.init();
+        TimesheetForm.init();
 
-    // 2. Load Initial Data (Jobs & States)
-    await loadAttributes();
+        // 2. Setup Global Listeners
+        this.setupListeners();
 
-    // 3. Initialize Components
-    TimeSplitWidget.init(); 
-    
-    // [IMPORTANT] Initialize EntryForm (was previously Form.init())
-    EntryForm.init(); 
-    
-    Calendar.init(document.getElementById('calendar'));
+        // 3. Load Dropdowns
+        this.loadAttributes();
+    },
 
-    // 4. Setup Sidebar Navigation Links
-    setupSidebarLinks();
-});
+    setupListeners() {
+        // Save
+        document.getElementById('timesheet-form')?.addEventListener('submit', (e) => this.handleSubmit(e));
 
-/**
- * Handle persistent impersonation state
- */
-function handleImpersonation() {
-    const storedTarget = sessionStorage.getItem('stech_impersonate');
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentTarget = urlParams.get('target_user');
+        // Delete
+        document.getElementById('btn-delete')?.addEventListener('click', () => this.handleDelete());
 
-    if (storedTarget && storedTarget !== currentTarget) {
-        urlParams.set('target_user', storedTarget);
-        window.location.search = urlParams.toString();
-        return; 
-    }
-    
-    const btn = document.getElementById('btn-end-impersonation');
-    if (btn) {
-        btn.addEventListener('click', () => {
-            sessionStorage.removeItem('stech_impersonate');
-            const url = new URL(window.location.href);
-            url.searchParams.delete('target_user');
-            window.location.href = url.toString();
+        // Add Row
+        document.getElementById('btn-add-row')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Add new row with 0% initially, manager will auto-balance
+            RowManager.add('', 0, true);
         });
-    }
-}
 
-/**
- * Load Initial Attributes from API
- */
-async function loadAttributes() {
-    try {
-        const attributes = await StechAPI.getAttributes();
-        window.StechTimesheet.state.jobs = attributes.jobs || [];
+        // Modal Close
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                TimesheetForm.hideModal();
+            });
+        });
+    },
+
+    async loadAttributes() {
+        const data = await TimesheetAPI.getAttributes();
+        if (data) {
+            RowManager.setJobs(data.jobs || []);
+            TimesheetForm.populateStateDatalist(data.states || []);
+        }
+    },
+
+    /**
+     * Entry Point: Called by Calendar when a date/event is clicked
+     */
+    open(date, id = null) {
+        this.currentId = id;
+        TimesheetForm.reset();
+        TimesheetForm.setDate(date);
+        TimesheetForm.setTitle(id ? "Edit Entry" : "New Entry");
+        TimesheetForm.toggleDeleteButton(!!id);
+
+        // [FIXED] Always clear rows first to prevent duplicates
+        RowManager.clear();
+
+        if (id) {
+            this.loadEntry(id);
+        } else {
+            // Only add a default row if it's a NEW entry
+            RowManager.add('', 100, true);
+            TimesheetForm.showModal();
+        }
+    },
+
+    async loadEntry(id) {
+        const data = await TimesheetAPI.getDetails(id);
+        if (data) {
+            TimesheetForm.populate(data);
+            
+            // Populate Rows via Manager
+            // Note: RowManager.clear() is already called in open(), so we just add here
+            if (data.activities && data.activities.length > 0) {
+                data.activities.forEach(act => RowManager.add(act.activity_description, act.activity_percent));
+            } else {
+                RowManager.add('', 100);
+            }
+
+            TimesheetForm.showModal();
+        }
+    },
+
+    async handleSubmit(e) {
+        e.preventDefault();
         
-        attributes.states.forEach(s => {
-            window.StechTimesheet.state.stateMap[s.state_name] = s.state_abbr;
-            window.StechTimesheet.state.stateMapRev[s.state_abbr] = s.state_name;
-        });
+        // Gather Data
+        const formData = TimesheetForm.gatherData();
+        formData.timesheet_id = this.currentId;
+        
+        // Gather Rows
+        const rows = RowManager.getAll();
+        formData.work_desc = rows.map(r => r.desc);
+        formData.work_percent = rows.map(r => r.percent);
 
-        // Populate Datalist for States
-        const stateDatalist = document.getElementById('state-options');
-        if (stateDatalist) {
-            stateDatalist.innerHTML = ''; 
-            attributes.states.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.state_name;
-                stateDatalist.appendChild(opt);
-            });
+        const success = await TimesheetAPI.save(formData);
+        if (success) {
+            TimesheetForm.hideModal();
+            this.refreshCalendar();
         }
-    } catch (e) {
-        console.error("Failed to load attributes", e);
+    },
+
+    async handleDelete() {
+        if (!this.currentId || !confirm("Are you sure you want to delete this entry?")) return;
+        
+        const success = await TimesheetAPI.delete(this.currentId);
+        if (success) {
+            TimesheetForm.hideModal();
+            this.refreshCalendar();
+        }
+    },
+
+    refreshCalendar() {
+        if (window.TimeclockManager.CalendarInstance) {
+            window.TimeclockManager.CalendarInstance.refetchEvents();
+        }
     }
-}
-
-/**
- * Logic to handle sidebar links (Admin, Analysis) using Nextcloud Router
- */
-function setupSidebarLinks() {
-    const navLinks = document.querySelectorAll('#app-navigation a');
-    
-    navLinks.forEach(link => {
-        const text = link.innerText.toLowerCase();
-        const href = link.getAttribute('href') || '';
-
-        if (text.includes('admin') || href.includes('admin')) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.location.href = generateUrl('/apps/timeclock-manager/admin');
-            });
-        }
-
-        if (text.includes('analysis') || href.includes('analysis')) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.location.href = generateUrl('/apps/timeclock-manager/analysis');
-            });
-        }
-    });
-}
+};
