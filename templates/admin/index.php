@@ -7,8 +7,6 @@ Util::addStyle('timeclock-manager', 'admin');
 
 // ---------------------------------------------------------------------------
 // MODULE CONFIGURATION
-// To completely remove a feature from the backend rendering, delete it here 
-// OR simply delete the file in templates/admin/panels/
 // ---------------------------------------------------------------------------
 $panels = [
     'users'     => ['file' => 'users.php',     'perm' => 'can_access_users'],
@@ -26,12 +24,10 @@ $panels = [
     <div id="app-content">
         <?php foreach ($panels as $id => $panel): ?>
             <?php 
-                // Check 1: Does the user have permission?
                 if (!empty($_[$panel['perm']])):
                     try {
-                        // Check 2: Try to load the module file. 
-                        // If the file was deleted to "remove" the feature, this gracefully fails/skips.
-                        print_unescaped($this->inc('admin/panels/' . pathinfo($panel['file'], PATHINFO_FILENAME))); 
+                        // FIX: Changed 'panels' to 'sections' to match your folder structure
+                        print_unescaped($this->inc('admin/sections/' . pathinfo($panel['file'], PATHINFO_FILENAME))); 
                     } catch (\Exception $e) {
                         // Feature is missing or deleted. Do nothing.
                     }

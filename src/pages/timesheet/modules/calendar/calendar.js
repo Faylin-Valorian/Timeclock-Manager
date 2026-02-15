@@ -4,9 +4,11 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 export const Calendar = {
     instance: null,
-    archiveMode: 0, // 0 = Active, 1 = Archived
+    archiveMode: 0, 
 
     init(el) {
+        if (!el) return;
+        
         this.instance = new FullCalendar(el, {
             plugins: [dayGridPlugin, interactionPlugin],
             initialView: 'dayGridMonth',
@@ -16,7 +18,6 @@ export const Calendar = {
             weekNumbers: true,
             
             eventSources: [
-                // SOURCE 1: Timesheets
                 {
                     events: (info, successCallback, failureCallback) => {
                         window.StechTimesheet.API.getTimesheets(info.startStr, info.endStr, this.archiveMode)
@@ -24,7 +25,6 @@ export const Calendar = {
                             .catch(err => failureCallback(err));
                     }
                 },
-                // SOURCE 2: Holidays
                 {
                     events: (info, successCallback, failureCallback) => {
                         window.StechTimesheet.API.request('get', '/api/calendar/holidays', {
@@ -41,7 +41,6 @@ export const Calendar = {
                 }
             ],
             
-            // Render Background Events (Holidays/Payroll)
             eventDidMount: (info) => {
                 if (info.event.display === 'background') {
                     const customBg = info.event.extendedProps.customBg;
@@ -59,14 +58,13 @@ export const Calendar = {
                 }
             },
 
-            // Render Text Content (Fix Overlaps)
             eventContent: (arg) => {
                 let div = document.createElement('div');
                 div.className = 'fc-event-content-box'; 
                 div.innerText = arg.event.title;
 
                 if (arg.event.display === 'background') {
-                    div.classList.add('fc-bg-text'); // Class for styling in SCSS
+                    div.classList.add('fc-bg-text'); 
                 } else {
                     div.style.backgroundColor = arg.event.backgroundColor;
                     div.style.padding = '2px 4px';
@@ -74,31 +72,30 @@ export const Calendar = {
                 return { domNodes: [div] };
             },
 
-            // Click Event (Open Form)
+            // [UPDATED] Click Event: Use EntryForm
             eventClick: (info) => {
                 const props = info.event.extendedProps;
                 if (props.isVisual || props.is_visual || info.event.display === 'background') return;
 
                 window.StechTimesheet.API.getTimesheetDetails(info.event.id)
                     .then(data => {
-                        if (window.StechTimesheet.Form) {
-                            window.StechTimesheet.Form.open(data.timesheet_date, data.timesheet_id);
+                        if (window.StechTimesheet.EntryForm) { // Check for EntryForm
+                            window.StechTimesheet.EntryForm.open(data.timesheet_date, data.timesheet_id);
                         }
                     })
                     .catch(err => console.error('Failed to load record details:', err));
             },
 
-            // Date Click (New Entry)
+            // [UPDATED] Date Click: Use EntryForm
             dateClick: (info) => {
                 const formEl = document.getElementById('timesheet-form');
                 if (formEl) {
                     formEl.reset();
-                    // Clear hidden inputs for widgets
                     formEl.querySelectorAll('.combined-time-input').forEach(input => input.value = '');
                 }
 
-                if (window.StechTimesheet.Form) {
-                    window.StechTimesheet.Form.open(info.dateStr, null);
+                if (window.StechTimesheet.EntryForm) { // Check for EntryForm
+                    window.StechTimesheet.EntryForm.open(info.dateStr, null);
                 }
             },
 
@@ -117,7 +114,6 @@ export const Calendar = {
         this.setupArchiveFilter();
     },
 
-    // Helper: Holiday Processing
     processHolidays(data) {
         const events = [];
         data.forEach(h => {
@@ -126,7 +122,6 @@ export const Calendar = {
                 ? new Date(h.end || h.holiday_end_date) 
                 : new Date(startDate);
             
-            // Adjust end date logic
             if (limitDate <= startDate) {
                 limitDate = new Date(startDate);
             }
