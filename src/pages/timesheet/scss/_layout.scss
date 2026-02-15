@@ -21,15 +21,15 @@
     background: var(--color-main-background); 
     color: var(--color-main-text);
     
-    /* Dimensions */
-    width: 80% !important; 
-    max-width: none !important; 
+    /* [CRITICAL] FORCE 80% VIEWPORT WIDTH */
+    width: 80vw !important; 
+    max-width: 1400px !important; /* Increased max-width just in case */
+    min-width: 600px;
     
-    /* [FIX] Use Viewport Height so it never exceeds screen size */
-    height: 90vh; 
-    max-height: 90vh; 
+    /* Height Logic */
+    height: 90vh !important; 
+    max-height: 90vh !important;
     
-    /* Layout */
     display: flex; 
     flex-direction: column; 
     
@@ -38,19 +38,20 @@
     overflow: hidden; 
 }
 
-/* [NEW] The Form must be a flex container to handle the scroll area */
+/* Form Container */
 #timesheet-form {
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: hidden; /* Prevent the form itself from overflowing */
+    overflow: hidden;
+    width: 100%; /* Ensure form fills card */
 }
 
 /* ==========================================================================
    SECTIONS
    ========================================================================== */
 .modal-header, .modal-footer {
-    flex-shrink: 0; /* Never shrink headers/footers */
+    flex-shrink: 0; 
     padding: 15px 25px; 
     background: var(--color-background-hover);
     border-color: var(--color-border);
@@ -72,11 +73,10 @@
 
 .modal-body { 
     padding: 25px; 
-    
-    /* [CRITICAL SCROLL FIX] */
-    overflow-y: auto; 
-    flex-grow: 1; 
-    min-height: 0; /* Firefox flexbox scroll fix */
-    
+    flex: 1;           
+    overflow-y: auto;  
+    min-height: 0;    
+    width: 100%; /* Ensure body fills form */
+    box-sizing: border-box; /* Include padding in width calculation */
     display: block; 
 }

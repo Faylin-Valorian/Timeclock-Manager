@@ -1,28 +1,25 @@
 /* ==========================================================================
-   CUSTOM WIDGETS
+   DYNAMIC WORK ROWS
    ========================================================================== */
-
-/* Dynamic Work Rows */
 .work-row { 
     display: flex; 
     gap: 10px; 
     margin-bottom: 10px; 
     align-items: center; 
-    
-    /* [FIX] Force side-by-side layout (never wrap) */
-    flex-wrap: nowrap; 
+    width: 100%;
 }
 
-/* Description (Grow to fill space) */
+/* JOB DESCRIPTION DROPDOWN */
 .work-desc {
-    flex-grow: 1;
-    min-width: 0; /* Prevents flex item from overflowing container */
+    flex: 1;           /* Take all available space */
+    width: auto !important; /* Override the default 100% width from .form-control */
+    min-width: 0;      /* Prevent flex blowout */
 }
 
-/* Percent Input (Fixed width, never shrinks) */
+/* PERCENT INPUT */
 .work-percent {
-    width: 80px !important;
-    flex-shrink: 0;
+    width: 80px !important;  /* Force fixed width */
+    flex: 0 0 80px;          /* Prevent growing or shrinking */
 }
 
 /* ==========================================================================

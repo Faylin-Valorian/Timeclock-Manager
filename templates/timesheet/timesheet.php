@@ -5,7 +5,6 @@
         for($h=0; $h<24; $h++) {
             foreach([0, 15, 30, 45] as $m) {
                 $time = sprintf("%02d:%02d", $h, $m);
-                // Format to AM/PM for display
                 $display = date("g:i A", strtotime($time)); 
                 echo "<option value=\"$display\">";
             }
@@ -63,7 +62,7 @@
                         </div>
                     </div>
 
-                    <div class="form-row-1" style="margin-top: 10px;">
+                    <div class="form-row-1">
                         <div class="input-group">
                             <label>Total Hours</label>
                             <input type="text" id="total-hours" class="form-control" readonly style="font-weight: bold; text-align: left;">
@@ -84,7 +83,15 @@
                 <div class="form-separator"></div>
                 
                 <div class="toggle-row-container">
-                    <div class="toggle-wrapper"><input type="checkbox" id="toggle-travel"><label for="toggle-travel"><span>🚗</span> Travel / Expenses</label></div>
+                    <div class="toggle-wrapper">
+                        <input type="checkbox" id="toggle-pto">
+                        <label for="toggle-pto">Vacation / PTO</label>
+                    </div>
+
+                    <div class="toggle-wrapper">
+                        <input type="checkbox" id="toggle-travel">
+                        <label for="toggle-travel">Travel / Expenses</label>
+                    </div>
                 </div>
 
                 <div id="travel-fields-container" class="travel-box hidden-section">
@@ -101,22 +108,14 @@
                             <input list="state-options" id="travel-state" class="form-control" placeholder="Select...">
                             <datalist id="state-options"></datalist>
                         </div>
-                        
                         <div class="input-group">
                             <label>County</label>
                             <input list="county-options" id="travel-county" class="form-control" placeholder="Type or Select...">
                             <datalist id="county-options"></datalist>
                         </div>
-                        
-                        <div class="input-group">
-                            <label>Miles</label>
-                            <input type="number" id="travel-miles" class="form-control">
-                        </div>
+                        <div class="input-group"><label>Miles</label><input type="number" id="travel-miles" class="form-control"></div>
                     </div>
-                    <div class="input-group">
-                        <label>Extra Expenses ($)</label>
-                        <input type="number" id="travel-extra-expense" class="form-control">
-                    </div>
+                    <div class="input-group"><label>Extra Expenses ($)</label><input type="number" id="travel-extra-expense" class="form-control"></div>
                 </div>
 
                 <div class="form-separator"></div>
