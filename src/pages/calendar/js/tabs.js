@@ -1,4 +1,4 @@
-import { Sidebar } from 'src/components/sidebar/js/sidebar.js';
+import { Sidebar } from 'src/components/sidebar/sidebar.js';
 import { CalendarModule } from './fullcalendar.js';
 import { TimesheetModule } from 'src/pages/timesheet/timesheet.js';
 
