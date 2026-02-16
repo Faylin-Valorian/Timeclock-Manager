@@ -1,110 +1,90 @@
 <?php
-declare(strict_types=1);
-
 namespace OCA\TimeclockManager\Timesheet\Controller;
 
-use OCP\IRequest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
-use OCP\IUserSession;
-use OCP\IGroupManager;
+use OCP\IRequest;
 use OCA\TimeclockManager\Timesheet\Service\TimesheetService;
-use OCA\TimeclockManager\Timesheet\Db\TimesheetMapper;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 
 class TimesheetController extends Controller {
-    private $userSession;
-    private $groupManager;
+
     private $service;
-    private $mapper;
+    private $userId;
 
-    public function __construct(IRequest $request, 
-                                IUserSession $userSession, 
-                                IGroupManager $groupManager,
-                                TimesheetService $service,
-                                TimesheetMapper $mapper) {
-        parent::__construct('timeclock-manager', $request);
-        $this->userSession = $userSession;
-        $this->groupManager = $groupManager;
+    public function __construct($AppName, IRequest $request, TimesheetService $service, $UserId) {
+        parent::__construct($AppName, $request);
         $this->service = $service;
-        $this->mapper = $mapper;
+        $this->userId = $UserId;
     }
 
-    private function getEffectiveUserId(): string {
-        $currentUser = $this->userSession->getUser();
-        if (!$currentUser) return ''; 
-        $currentUid = $currentUser->getUID();
-        $targetUid = $this->request->getParam('target_user');
-        
-        if ($targetUid && $targetUid !== $currentUid && $this->groupManager->isAdmin($currentUid)) {
-            return $targetUid;
-        }
-        return $currentUid;
+    /**
+     * @NoAdminRequired
+     */
+    public function index() {
+        return new DataResponse($this->service->findAll($this->userId));
     }
 
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function getAttributes(): DataResponse {
-        return new DataResponse($this->service->getAttributes());
+    /**
+     * @NoAdminRequired
+     */
+    public function show(int $id) {
+        return new DataResponse($this->service->find($id, $this->userId));
     }
 
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function getCounties(string $abbr): DataResponse {
-        return new DataResponse($this->mapper->getCounties($abbr));
+    /**
+     * @NoAdminRequired
+     */
+    public function create() {
+        $data = $this->getParams();
+        return new DataResponse($this->service->create($data, $this->userId));
     }
 
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function getTimesheet(int $id): DataResponse {
-        $uid = $this->getEffectiveUserId();
-        $ts = $this->mapper->getById($id, $uid);
-        
-        if (!$ts) return new DataResponse([], 404);
-        
-        $ts['activities'] = $this->mapper->getActivities($id);
-        
-        $currentUser = $this->userSession->getUser();
-        $ts['is_admin'] = $currentUser && $this->groupManager->isAdmin($currentUser->getUID());
-        
-        return new DataResponse($ts);
+    /**
+     * @NoAdminRequired
+     */
+    public function update(int $id) {
+        $data = $this->getParams();
+        return new DataResponse($this->service->update($id, $data, $this->userId));
     }
 
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function deleteTimesheet(int $id): DataResponse {
-        try {
-            $uid = $this->getEffectiveUserId();
-            $this->service->deleteTimesheet($id, $uid);
-            return new DataResponse(['status' => 'success']);
-        } catch (\Exception $e) {
-            return new DataResponse(['error' => $e->getMessage()], 500);
-        }
+    /**
+     * @NoAdminRequired
+     */
+    public function destroy(int $id) {
+        return new DataResponse($this->service->delete($id, $this->userId));
     }
 
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function restoreTimesheet(int $id): DataResponse {
-        try {
-            $uid = $this->getEffectiveUserId();
-            $this->service->restoreTimesheet($id, $uid);
-            return new DataResponse(['status' => 'success']);
-        } catch (\Exception $e) {
-            return new DataResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function saveTimesheet(): DataResponse {
-        try {
-            $uid = $this->getEffectiveUserId();
-            $data = $this->request->getParams();
-            $id = $this->service->saveTimesheet($data, $uid);
-            return new DataResponse(['status' => 'success', 'id' => $id]);
-        } catch (\Exception $e) {
-            return new DataResponse(['error' => $e->getMessage()], 500);
-        }
+    /**
+     * Extract parameters from the request
+     */
+    private function getParams() {
+        return [
+            // Standard Time Fields
+            'date' => $this->request->getParam('date'),
+            'time_in' => $this->request->getParam('time_in'),
+            'time_out' => $this->request->getParam('time_out'),
+            'break_min' => $this->request->getParam('break_min'),
+            'time_total' => $this->request->getParam('time_total'),
+            'comments' => $this->request->getParam('comments'),
+            
+            // PTO Toggle
+            'is_pto' => $this->request->getParam('is_pto'),
+            
+            // Travel Toggles
+            'travel_per_diem' => $this->request->getParam('travel_per_diem'),
+            'travel_road_scanning' => $this->request->getParam('travel_road_scanning'),
+            'travel_first_last_day' => $this->request->getParam('travel_first_last_day'),
+            'travel_overnight' => $this->request->getParam('travel_overnight'),
+            
+            // Travel Location Data
+            'travel_state' => $this->request->getParam('travel_state'),
+            'travel_county' => $this->request->getParam('travel_county'),
+            'travel_miles' => $this->request->getParam('travel_miles'),
+            'travel_extra_expenses' => $this->request->getParam('travel_extra_expenses'),
+            
+            // Child Rows (Activities)
+            // Expects array of objects: [{ description: "...", percent: 50 }, ...]
+            'activities' => $this->request->getParam('activities', [])
+        ];
     }
 }

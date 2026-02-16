@@ -1,71 +1,145 @@
 <?php
-declare(strict_types=1);
-
 namespace OCA\TimeclockManager\Timesheet\Db;
 
 use OCP\AppFramework\Db\QBMapper;
-use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\IDBConnection;
 
 class TimesheetMapper extends QBMapper {
+
     public function __construct(IDBConnection $db) {
         parent::__construct($db, 'tm_timesheets', Timesheet::class);
     }
 
-    public function getById(int $id, string $uid): ?array {
+    /**
+     * @throws \OCP\AppFramework\Db\DoesNotExistException
+     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+     */
+    public function find(int $id, string $userId) {
         $qb = $this->db->getQueryBuilder();
-        $res = $qb->select('*')
-            ->from('tm_timesheets')
-            ->where($qb->expr()->eq('timesheet_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)))
-            ->andWhere($qb->expr()->eq('userid', $qb->createNamedParameter($uid)))
-            ->executeQuery()
-            ->fetch();
-        return $res ?: null;
+
+        $qb->select('*')
+           ->from('tm_timesheets')
+           ->where(
+               // Map standard 'id' request to 'timesheet_id' column
+               $qb->expr()->eq('timesheet_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT))
+           )
+           ->andWhere(
+               $qb->expr()->eq('userid', $qb->createNamedParameter($userId))
+           );
+
+        return $this->findEntity($qb);
     }
 
-    public function getActivities(int $id): array {
+    public function findAll(string $userId) {
         $qb = $this->db->getQueryBuilder();
-        return $qb->select('*')
-            ->from('tm_activity')
-            ->where($qb->expr()->eq('timesheet_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)))
-            ->executeQuery()
-            ->fetchAll();
+
+        $qb->select('*')
+           ->from('tm_timesheets')
+           ->where(
+               $qb->expr()->eq('userid', $qb->createNamedParameter($userId))
+           )
+           ->andWhere(
+               $qb->expr()->eq('archive', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT))
+           )
+           ->orderBy('timesheet_date', 'DESC');
+
+        return $this->findEntities($qb);
     }
 
-    // --- Dropdown Data Helpers ---
-    
-    public function getActiveJobs(): array {
-        $qb = $this->db->getQueryBuilder();
-        return $qb->select('*')->from('tm_jobs')
-            ->where($qb->expr()->eq('job_archive', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))
-            ->orderBy('job_name', 'ASC')
-            ->executeQuery()
-            ->fetchAll();
-    }
+    public function insert(Timesheet $timesheet) {
+        $sql = 'INSERT INTO `*PREFIX*tm_timesheets` 
+                (userid, timesheet_date, time_in, time_out, time_break, time_total, is_pto, 
+                 travel_road_scanning, travel_first_last_day, travel_overnight, travel_per_diem, 
+                 travel_state, travel_county, travel_miles, travel_extra_expenses, 
+                 additional_comments, archive)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-    public function getStates(): array {
-        $qb = $this->db->getQueryBuilder();
-        return $qb->select('*')->from('tm_states')
-            ->where($qb->expr()->eq('is_enabled', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))
-            ->orderBy('state_name', 'ASC')
-            ->executeQuery()
-            ->fetchAll();
-    }
-
-    public function getCounties(string $stateAbbr): array {
-        $qb = $this->db->getQueryBuilder();
-        $state = $qb->select('fips_code')->from('tm_states')
-            ->where($qb->expr()->eq('state_abbr', $qb->createNamedParameter($stateAbbr)))
-            ->executeQuery()
-            ->fetch();
+        $params = [
+            $timesheet->getUserid(),
+            $timesheet->getTimesheetDate(),
+            $timesheet->getTimeIn(),
+            $timesheet->getTimeOut(),
+            $timesheet->getTimeBreak(),
+            $timesheet->getTimeTotal(),
+            $timesheet->getIsPto(),
             
-        if (!$state) return [];
+            $timesheet->getTravelRoadScanning(),
+            $timesheet->getTravelFirstLastDay(),
+            $timesheet->getTravelOvernight(),
+            $timesheet->getTravelPerDiem(),
+            
+            $timesheet->getTravelState(),
+            $timesheet->getTravelCounty(),
+            $timesheet->getTravelMiles(),
+            $timesheet->getTravelExtraExpenses(),
+            
+            $timesheet->getAdditionalComments(),
+            $timesheet->getArchive() ?? 0
+        ];
 
-        return $qb->select('*')->from('tm_counties')
-            ->where($qb->expr()->eq('state_fips', $qb->createNamedParameter($state['fips_code'])))
-            ->andWhere($qb->expr()->eq('is_enabled', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))
-            ->orderBy('county_name', 'ASC')
-            ->executeQuery()
-            ->fetchAll();
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        // Map the inserted ID back to the Entity's standard ID field
+        $timesheet->setId($this->db->lastInsertId('*PREFIX*tm_timesheets'));
+        return $timesheet;
+    }
+
+    public function update(Timesheet $timesheet) {
+        $sql = 'UPDATE `*PREFIX*tm_timesheets` SET 
+                timesheet_date = ?, 
+                time_in = ?, 
+                time_out = ?, 
+                time_break = ?, 
+                time_total = ?, 
+                is_pto = ?, 
+                travel_road_scanning = ?, 
+                travel_first_last_day = ?, 
+                travel_overnight = ?, 
+                travel_per_diem = ?, 
+                travel_state = ?, 
+                travel_county = ?, 
+                travel_miles = ?, 
+                travel_extra_expenses = ?, 
+                additional_comments = ?, 
+                archive = ?
+                WHERE timesheet_id = ? AND userid = ?';
+
+        $params = [
+            $timesheet->getTimesheetDate(),
+            $timesheet->getTimeIn(),
+            $timesheet->getTimeOut(),
+            $timesheet->getTimeBreak(),
+            $timesheet->getTimeTotal(),
+            $timesheet->getIsPto(),
+            
+            $timesheet->getTravelRoadScanning(),
+            $timesheet->getTravelFirstLastDay(),
+            $timesheet->getTravelOvernight(),
+            $timesheet->getTravelPerDiem(),
+            
+            $timesheet->getTravelState(),
+            $timesheet->getTravelCounty(),
+            $timesheet->getTravelMiles(),
+            $timesheet->getTravelExtraExpenses(),
+            
+            $timesheet->getAdditionalComments(),
+            $timesheet->getArchive(),
+            
+            $timesheet->getId(), // Uses the Entity's internal ID which maps to timesheet_id
+            $timesheet->getUserid()
+        ];
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        return $timesheet;
+    }
+
+    public function delete(int $id, string $userId) {
+        $sql = 'DELETE FROM `*PREFIX*tm_timesheets` WHERE timesheet_id = ? AND userid = ?';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id, $userId]);
     }
 }
