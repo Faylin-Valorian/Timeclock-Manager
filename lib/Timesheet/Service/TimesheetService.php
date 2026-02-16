@@ -19,7 +19,7 @@ class TimesheetService {
     }
 
     public function findAll(string $userId) {
-        // Mapper already filters for archive = 0
+        // Mapper filters out archived (deleted) records automatically
         return $this->mapper->findAll($userId);
     }
 
@@ -27,10 +27,8 @@ class TimesheetService {
         try {
             $timesheet = $this->mapper->find($id, $userId);
             
-            // Attach Activities (Child Rows)
-            $activities = $this->activityMapper->findAllForTimesheet($id);
-            // Dynamic property attachment for JSON response
-            $timesheet->activities = $activities;
+            // Attach child rows (activities)
+            $timesheet->activities = $this->activityMapper->findAllForTimesheet($id);
 
             return $timesheet;
         } catch (DoesNotExistException $e) {
@@ -44,14 +42,13 @@ class TimesheetService {
         
         $this->hydrate($timesheet, $data);
         
-        // [CRITICAL] Ensure new records are visible
+        // [CRITICAL] New records are visible (archive = 0)
         $timesheet->setArchive(0); 
 
-        // 1. Save Header
-        // The Mapper's insert() will populate the ID on the entity
+        // Insert Header
         $savedTimesheet = $this->mapper->insert($timesheet);
 
-        // 2. Save Activities
+        // Insert Activities
         if (isset($data['activities']) && is_array($data['activities'])) {
             $this->processActivities($savedTimesheet->getTimesheetId(), $data['activities']);
         }
@@ -61,16 +58,16 @@ class TimesheetService {
 
     public function update(int $id, array $data, string $userId) {
         try {
-            // 1. Load existing entity (ensures ownership)
+            // 1. Fetch existing record to ensure ownership
             $timesheet = $this->mapper->find($id, $userId);
             
-            // 2. Apply changes
+            // 2. Update fields
             $this->hydrate($timesheet, $data);
 
-            // 3. Update Header
+            // 3. Save Header
             $updatedTimesheet = $this->mapper->update($timesheet);
 
-            // 4. Update Activities (Delete All + Re-insert)
+            // 4. Replace Activities
             if (isset($data['activities']) && is_array($data['activities'])) {
                 $this->processActivities($id, $data['activities']);
             }
@@ -85,13 +82,11 @@ class TimesheetService {
         try {
             $timesheet = $this->mapper->find($id, $userId);
             
-            // [CRITICAL] Soft Delete (Archive) instead of Hard Delete
+            // [CRITICAL] Soft Delete: Mark as archived
             $timesheet->setArchive(1);
             
-            // We use update() to save the archive status
-            $this->mapper->update($timesheet);
-            
-            return $timesheet;
+            // Perform Update instead of Delete
+            return $this->mapper->update($timesheet);
         } catch (DoesNotExistException $e) {
             return null;
         }
@@ -104,13 +99,12 @@ class TimesheetService {
         $this->activityMapper->deleteAllForTimesheet($timesheetId);
 
         foreach ($items as $row) {
-            // Skip empty rows
             if (empty($row['description']) && empty($row['percent'])) continue;
 
             $activity = new Activity();
             $activity->setTimesheetId($timesheetId);
             
-            // Support both camelCase (JSON) and snake_case (Legacy)
+            // Handle snake_case or standard names
             $desc = $row['description'] ?? $row['activity_description'] ?? '';
             $pct = $row['percent'] ?? $row['activity_percent'] ?? 0;
 
@@ -122,13 +116,18 @@ class TimesheetService {
     }
 
     private function hydrate(Timesheet $timesheet, array $data) {
-        // Map frontend params to Entity setters
         $timesheet->setTimesheetDate($data['date'] ?? null);
         $timesheet->setTimeIn($data['time_in'] ?? null);
         $timesheet->setTimeOut($data['time_out'] ?? null);
-        $timesheet->setTimeBreak((int)($data['break_min'] ?? $data['time_break'] ?? 0));
+        
+        // Handle variations (time_break vs break_min)
+        $break = $data['break_min'] ?? $data['time_break'] ?? 0;
+        $timesheet->setTimeBreak((int)$break);
+        
         $timesheet->setTimeTotal((float)($data['time_total'] ?? 0.0));
-        $timesheet->setAdditionalComments($data['comments'] ?? $data['additional_comments'] ?? '');
+        
+        $comments = $data['comments'] ?? $data['additional_comments'] ?? '';
+        $timesheet->setAdditionalComments($comments);
         
         $timesheet->setIsPto((int)($data['is_pto'] ?? 0));
         

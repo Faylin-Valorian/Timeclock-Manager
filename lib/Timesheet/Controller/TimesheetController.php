@@ -22,8 +22,6 @@ class TimesheetController extends Controller {
      * Method: GET
      */
     public function getAttributes() {
-        // [TODO] Wire up JobService and LocationService here
-        // Returning empty structures to prevent frontend crashes
         return new DataResponse([
             'jobs' => [],
             'states' => []
@@ -41,12 +39,13 @@ class TimesheetController extends Controller {
     /**
      * Route: /api/timesheets
      * Method: POST
-     * Handles both Create and Update based on presence of 'id'
+     * Handles both Create (New Entry) and Update (Existing Entry)
      */
     public function saveTimesheet() {
         $data = $this->getParams();
         
-        // [CRITICAL] Check 'id' to distinguish Update vs Create
+        // [CRITICAL FIX] 
+        // If ID exists, Update. If not, Create.
         if (!empty($data['id'])) {
             return new DataResponse($this->service->update((int)$data['id'], $data, $this->userId));
         } else {
@@ -63,28 +62,11 @@ class TimesheetController extends Controller {
     }
 
     /**
-     * Route: /api/timesheets/{id}/restore
-     * Method: POST
-     */
-    public function restoreTimesheet(int $id) {
-        // Placeholder for future restore logic
-        return new DataResponse(['status' => 'success', 'message' => 'Not implemented']);
-    }
-
-    /**
-     * Route: /api/locations/counties/{abbr}
-     * Method: GET
-     */
-    public function getCounties(string $abbr) {
-        // Placeholder for county lookup
-        return new DataResponse([]);
-    }
-
-    /**
-     * Extract parameters from the request
+     * Helper to extract parameters from request
      */
     private function getParams() {
         return [
+            // This 'id' is sent by the patched frontend
             'id' => $this->request->getParam('id'), 
             
             'date' => $this->request->getParam('date'),

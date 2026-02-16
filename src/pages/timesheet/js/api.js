@@ -1,68 +1,68 @@
-import { TmClient } from 'src/api/api.js';
+import { generateUrl } from '@nextcloud/router';
+import axios from '@nextcloud/axios';
 
 export const TimesheetAPI = {
+    // Define Routes
+    routes: {
+        timesheets: generateUrl('/apps/timeclock-manager/api/timesheets'),
+        attributes: generateUrl('/apps/timeclock-manager/api/attributes')
+    },
+
     /**
-     * Get Dropdown Attributes (Jobs, States)
+     * Get Attributes (Jobs, States, etc)
      */
     async getAttributes() {
         try {
-            return await TmClient.request('GET', '/api/attributes');
-        } catch (e) {
-            console.error("Failed to load attributes", e);
-            return { jobs: [], states: [] };
+            const response = await axios.get(this.routes.attributes);
+            return response.data;
+        } catch (error) {
+            console.error('API: Failed to load attributes', error);
+            return null;
         }
     },
 
     /**
-     * [NEW] Fetch Counties for a specific State
-     */
-    async getCounties(stateAbbr) {
-        try {
-            // Expects backend route: /api/locations/counties/{state}
-            return await TmClient.request('GET', `/api/locations/counties/${stateAbbr}`);
-        } catch (e) {
-            console.error("Failed to load counties", e);
-            return [];
-        }
-    },
-
-    /**
-     * Get details for a single timesheet entry
+     * Get Single Timesheet Details
      */
     async getDetails(id) {
+        if (!id) return null;
         try {
-            return await TmClient.request('GET', `/api/timesheets/${id}`);
-        } catch (e) {
-            console.error("Error loading entry", e);
-            alert("Failed to load entry details.");
+            const url = `${this.routes.timesheets}/${id}`;
+            const response = await axios.get(url);
+            return response.data;
+        } catch (error) {
+            console.error(`API: Failed to load timesheet ${id}`, error);
             return null;
         }
     },
 
     /**
-     * Save a timesheet entry (New or Update)
+     * Save Timesheet (Create or Update)
      */
-    async save(formData) {
+    async save(data) {
         try {
-            const response = await TmClient.request('POST', '/api/timesheets', formData);
-            return response?.id; // Return the ID of the saved item
-        } catch (err) {
-            console.error(err);
-            alert("Failed to save timesheet.");
-            return null;
+            // [CRITICAL] Nextcloud controllers expect JSON.
+            // Axios sends JSON by default when data is an object.
+            const response = await axios.post(this.routes.timesheets, data);
+            
+            // Return true if success (200 OK or 201 Created)
+            return response.status === 200 || response.status === 201;
+        } catch (error) {
+            console.error('API: Failed to save timesheet', error);
+            return false;
         }
     },
 
     /**
-     * Delete a timesheet entry
+     * Delete Timesheet (Archive)
      */
     async delete(id) {
         try {
-            await TmClient.request('DELETE', `/api/timesheets/${id}`);
-            return true;
-        } catch (err) {
-            console.error(err);
-            alert("Failed to delete entry.");
+            const url = `${this.routes.timesheets}/${id}`;
+            const response = await axios.delete(url);
+            return response.status === 200;
+        } catch (error) {
+            console.error(`API: Failed to delete timesheet ${id}`, error);
             return false;
         }
     }

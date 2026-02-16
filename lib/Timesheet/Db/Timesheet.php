@@ -5,10 +5,9 @@ use OCP\AppFramework\Db\Entity;
 
 class Timesheet extends Entity implements \JsonSerializable {
 
-    // Custom Primary Key
+    // [CRITICAL] matches database column 'timesheet_id'
     protected $timesheetId;
     
-    // Standard Fields
     protected $userid;
     protected $timesheetDate;
     protected $timeIn;
@@ -17,10 +16,10 @@ class Timesheet extends Entity implements \JsonSerializable {
     protected $timeTotal;
     protected $isPto;
     
-    // Legacy Column (from migration)
+    // Legacy support for 'travel' column if it exists
     protected $travel; 
 
-    // Travel Details
+    // Travel Columns
     protected $travelRoadScanning;
     protected $travelFirstLastDay;
     protected $travelOvernight;
@@ -34,7 +33,9 @@ class Timesheet extends Entity implements \JsonSerializable {
     protected $archive;
 
     public function __construct() {
+        // map 'timesheetId' property to integer type
         $this->addType('timesheetId', 'integer');
+        
         $this->addType('userid', 'string');
         $this->addType('timesheetDate', 'string');
         $this->addType('timeIn', 'string');
@@ -57,12 +58,13 @@ class Timesheet extends Entity implements \JsonSerializable {
     }
 
     /**
-     * [CRITICAL PATCH] Sync Database Column (timesheet_id) with Entity ID
-     * This enables update() and delete() to work correctly in the Mapper.
+     * [CRITICAL FIX]
+     * Nextcloud calls this setter when hydration from DB happens.
+     * We MUST sync it to the parent Entity's ID.
      */
     public function setTimesheetId(int $id) {
         $this->timesheetId = $id;
-        $this->setId($id); 
+        $this->setId($id); // This makes $this->getId() work for Updates!
     }
     
     public function getTimesheetId(): int {
@@ -78,15 +80,18 @@ class Timesheet extends Entity implements \JsonSerializable {
     }
 
     /**
-     * [CRITICAL PATCH] Map camelCase properties to snake_case for Frontend
+     * Format data for the Frontend
      */
     public function jsonSerialize(): array {
         return [
+            // Send BOTH to ensure frontend can find one
             'id' => $this->getId(), 
             'timesheet_id' => $this->timesheetId,
+            
             'date' => $this->timesheetDate,
             'userid' => $this->userid,
             
+            // Standardize snake_case for frontend
             'time_in' => $this->timeIn,
             'time_out' => $this->timeOut,
             'time_break' => $this->timeBreak, 
@@ -104,7 +109,6 @@ class Timesheet extends Entity implements \JsonSerializable {
             'travel_miles' => $this->travelMiles,
             'travel_extra_expenses' => $this->travelExtraExpenses,
             
-            // Dynamic properties attached by Service
             'activities' => $this->activities ?? [],
             'archive' => $this->archive
         ];

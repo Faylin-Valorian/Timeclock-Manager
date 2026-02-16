@@ -11,10 +11,7 @@ export const TimesheetForm = {
         this.setupCalculations();
     },
 
-    /**
-     * Optional: Helper to store ID if needed for internal logic,
-     * though the Module currently handles the ID for save/delete.
-     */
+    // Optional: Keep local ID ref if needed, though Module handles it.
     setIds(id) {
         this.currentId = id; 
     },
@@ -45,7 +42,7 @@ export const TimesheetForm = {
 
     populate(data) {
         // 1. Standard Fields
-        // Handle both potential naming conventions (DB vs Form)
+        // Backend sends snake_case via jsonSerialize
         document.getElementById('break-min').value = data.time_break || data.break_min || 0;
         document.getElementById('total-hours').value = data.time_total || 0;
         document.getElementById('additional-comments').value = data.additional_comments || '';
@@ -55,7 +52,7 @@ export const TimesheetForm = {
         TimeWidget.set('time-out', data.time_out);
 
         // 3. Toggles
-        // Ensure strictly checking against 1 or "1"
+        // Ensure strictly checking against 1
         document.getElementById('toggle-pto').checked = parseInt(data.is_pto) === 1;
         
         // Travel Toggles

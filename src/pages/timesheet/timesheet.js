@@ -22,7 +22,7 @@ export const TimesheetModule = {
         document.getElementById('timesheet-form')?.addEventListener('submit', (e) => this.handleSubmit(e));
 
         // Delete
-        document.getElementById('btn-delete')?.addEventListener('click', () => this.handleDelete());
+        document.getElementById('btn-delete')?.addEventListener('click', (e) => this.handleDelete());
 
         // Add Row
         document.getElementById('btn-add-row')?.addEventListener('click', (e) => {
@@ -50,6 +50,8 @@ export const TimesheetModule = {
 
     /**
      * Entry Point: Called by Calendar when a date/event is clicked
+     * @param {string} date - YYYY-MM-DD
+     * @param {string|number|null} id - The Timesheet ID (if editing)
      */
     open(date, id = null) {
         // [CRITICAL] Ensure ID is an integer if present
@@ -58,9 +60,11 @@ export const TimesheetModule = {
         TimesheetForm.reset();
         TimesheetForm.setDate(date);
         TimesheetForm.setTitle(id ? "Edit Entry" : "New Entry");
-        TimesheetForm.toggleDeleteButton(!!id);
+        
+        // Show Delete button only if editing
+        TimesheetForm.toggleDeleteButton(!!this.currentId);
 
-        // [FIX] Always clear rows first to prevent duplicates
+        // [FIX] Always clear rows first to prevent duplicates from previous opens
         RowManager.clear();
 
         if (this.currentId) {
@@ -76,12 +80,13 @@ export const TimesheetModule = {
         try {
             const data = await TimesheetAPI.getDetails(id);
             if (data) {
+                // Populate Form Fields
                 TimesheetForm.populate(data);
                 
                 // Populate Rows via Manager
                 if (data.activities && data.activities.length > 0) {
                     data.activities.forEach(act => {
-                        // Handle both backend naming conventions (snake_case vs camelCase)
+                        // Handle potential backend naming differences
                         const desc = act.description || act.activity_description || '';
                         const pct = act.percent || act.activity_percent || 0;
                         RowManager.add(desc, pct);
@@ -116,35 +121,33 @@ export const TimesheetModule = {
             percent: r.percent
         }));
 
-        try {
-            const success = await TimesheetAPI.save(formData);
-            if (success) {
-                TimesheetForm.hideModal();
-                this.refreshCalendar();
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Error saving timesheet.");
+        const success = await TimesheetAPI.save(formData);
+        
+        if (success) {
+            // Close modal ONLY on success
+            TimesheetForm.hideModal();
+            this.refreshCalendar();
+        } else {
+            alert("Failed to save timesheet.");
         }
     },
 
     async handleDelete() {
         if (!this.currentId || !confirm("Are you sure you want to delete this entry?")) return;
         
-        try {
-            const success = await TimesheetAPI.delete(this.currentId);
-            if (success) {
-                TimesheetForm.hideModal();
-                this.refreshCalendar();
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Error deleting timesheet.");
+        const success = await TimesheetAPI.delete(this.currentId);
+        
+        if (success) {
+            TimesheetForm.hideModal();
+            this.refreshCalendar();
+        } else {
+            alert("Failed to delete timesheet.");
         }
     },
 
     refreshCalendar() {
         if (window.TimeclockManager.CalendarInstance) {
+            // Refetch events to show the updated data (or remove the deleted one)
             window.TimeclockManager.CalendarInstance.refetchEvents();
         }
     }

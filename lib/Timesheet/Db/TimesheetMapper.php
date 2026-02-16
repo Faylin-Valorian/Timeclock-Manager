@@ -80,7 +80,8 @@ class TimesheetMapper extends QBMapper {
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
 
-        // [CRITICAL] Set the custom ID on the entity so it knows it is saved
+        // [CRITICAL FIX] 
+        // Sync the new DB ID back to the Entity immediately
         $id = $this->db->lastInsertId('*PREFIX*tm_timesheets');
         $timesheet->setTimesheetId((int)$id);
         
@@ -131,7 +132,8 @@ class TimesheetMapper extends QBMapper {
             $timesheet->getAdditionalComments(),
             $timesheet->getArchive(),
             
-            $timesheet->getId(), // This works because setTimesheetId() syncs it
+            // [CRITICAL FIX] Use getId() which is now synced with timesheet_id
+            $timesheet->getId(), 
             $timesheet->getUserid()
         ];
 
