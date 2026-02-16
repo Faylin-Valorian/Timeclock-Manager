@@ -52,17 +52,19 @@ export const TimesheetModule = {
      * Entry Point: Called by Calendar when a date/event is clicked
      */
     open(date, id = null) {
-        this.currentId = id;
+        // [CRITICAL] Ensure ID is an integer if present
+        this.currentId = id ? parseInt(id, 10) : null;
+        
         TimesheetForm.reset();
         TimesheetForm.setDate(date);
         TimesheetForm.setTitle(id ? "Edit Entry" : "New Entry");
         TimesheetForm.toggleDeleteButton(!!id);
 
-        // [FIXED] Always clear rows first to prevent duplicates
+        // [FIX] Always clear rows first to prevent duplicates
         RowManager.clear();
 
-        if (id) {
-            this.loadEntry(id);
+        if (this.currentId) {
+            this.loadEntry(this.currentId);
         } else {
             // Only add a default row if it's a NEW entry
             RowManager.add('', 100, true);
@@ -71,48 +73,73 @@ export const TimesheetModule = {
     },
 
     async loadEntry(id) {
-        const data = await TimesheetAPI.getDetails(id);
-        if (data) {
-            TimesheetForm.populate(data);
-            
-            // Populate Rows via Manager
-            // Note: RowManager.clear() is already called in open(), so we just add here
-            if (data.activities && data.activities.length > 0) {
-                data.activities.forEach(act => RowManager.add(act.activity_description, act.activity_percent));
-            } else {
-                RowManager.add('', 100);
-            }
+        try {
+            const data = await TimesheetAPI.getDetails(id);
+            if (data) {
+                TimesheetForm.populate(data);
+                
+                // Populate Rows via Manager
+                if (data.activities && data.activities.length > 0) {
+                    data.activities.forEach(act => {
+                        // Handle both backend naming conventions (snake_case vs camelCase)
+                        const desc = act.description || act.activity_description || '';
+                        const pct = act.percent || act.activity_percent || 0;
+                        RowManager.add(desc, pct);
+                    });
+                } else {
+                    RowManager.add('', 100);
+                }
 
-            TimesheetForm.showModal();
+                TimesheetForm.showModal();
+            }
+        } catch (e) {
+            console.error("Failed to load entry", e);
+            alert("Error loading timesheet data.");
         }
     },
 
     async handleSubmit(e) {
         e.preventDefault();
         
-        // Gather Data
+        // Gather Data from Form Helper
         const formData = TimesheetForm.gatherData();
-        formData.timesheet_id = this.currentId;
+        
+        // [CRITICAL FIX] Attach the ID so the backend knows to UPDATE
+        formData.id = this.currentId; 
         
         // Gather Rows
         const rows = RowManager.getAll();
-        formData.work_desc = rows.map(r => r.desc);
-        formData.work_percent = rows.map(r => r.percent);
+        
+        // Format activities for the backend
+        formData.activities = rows.map(r => ({
+            description: r.desc,
+            percent: r.percent
+        }));
 
-        const success = await TimesheetAPI.save(formData);
-        if (success) {
-            TimesheetForm.hideModal();
-            this.refreshCalendar();
+        try {
+            const success = await TimesheetAPI.save(formData);
+            if (success) {
+                TimesheetForm.hideModal();
+                this.refreshCalendar();
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error saving timesheet.");
         }
     },
 
     async handleDelete() {
         if (!this.currentId || !confirm("Are you sure you want to delete this entry?")) return;
         
-        const success = await TimesheetAPI.delete(this.currentId);
-        if (success) {
-            TimesheetForm.hideModal();
-            this.refreshCalendar();
+        try {
+            const success = await TimesheetAPI.delete(this.currentId);
+            if (success) {
+                TimesheetForm.hideModal();
+                this.refreshCalendar();
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error deleting timesheet.");
         }
     },
 

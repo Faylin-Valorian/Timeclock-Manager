@@ -19,6 +19,7 @@ class TimesheetService {
     }
 
     public function findAll(string $userId) {
+        // Mapper already filters for archive = 0
         return $this->mapper->findAll($userId);
     }
 
@@ -42,13 +43,17 @@ class TimesheetService {
         $timesheet->setUserid($userId);
         
         $this->hydrate($timesheet, $data);
+        
+        // [CRITICAL] Ensure new records are visible
+        $timesheet->setArchive(0); 
 
         // 1. Save Header
+        // The Mapper's insert() will populate the ID on the entity
         $savedTimesheet = $this->mapper->insert($timesheet);
 
         // 2. Save Activities
         if (isset($data['activities']) && is_array($data['activities'])) {
-            $this->processActivities($savedTimesheet->getId(), $data['activities']);
+            $this->processActivities($savedTimesheet->getTimesheetId(), $data['activities']);
         }
 
         return $savedTimesheet;
@@ -56,14 +61,16 @@ class TimesheetService {
 
     public function update(int $id, array $data, string $userId) {
         try {
+            // 1. Load existing entity (ensures ownership)
             $timesheet = $this->mapper->find($id, $userId);
             
+            // 2. Apply changes
             $this->hydrate($timesheet, $data);
 
-            // 1. Update Header
+            // 3. Update Header
             $updatedTimesheet = $this->mapper->update($timesheet);
 
-            // 2. Update Activities (Delete All + Re-insert)
+            // 4. Update Activities (Delete All + Re-insert)
             if (isset($data['activities']) && is_array($data['activities'])) {
                 $this->processActivities($id, $data['activities']);
             }
@@ -78,11 +85,11 @@ class TimesheetService {
         try {
             $timesheet = $this->mapper->find($id, $userId);
             
-            // Delete children first
-            $this->activityMapper->deleteAllForTimesheet($id);
+            // [CRITICAL] Soft Delete (Archive) instead of Hard Delete
+            $timesheet->setArchive(1);
             
-            // Delete parent
-            $this->mapper->delete($timesheet->getId(), $userId);
+            // We use update() to save the archive status
+            $this->mapper->update($timesheet);
             
             return $timesheet;
         } catch (DoesNotExistException $e) {
@@ -102,8 +109,13 @@ class TimesheetService {
 
             $activity = new Activity();
             $activity->setTimesheetId($timesheetId);
-            $activity->setActivityDescription($row['description'] ?? '');
-            $activity->setActivityPercent((int)($row['percent'] ?? 0));
+            
+            // Support both camelCase (JSON) and snake_case (Legacy)
+            $desc = $row['description'] ?? $row['activity_description'] ?? '';
+            $pct = $row['percent'] ?? $row['activity_percent'] ?? 0;
+
+            $activity->setActivityDescription($desc);
+            $activity->setActivityPercent((int)$pct);
             
             $this->activityMapper->insert($activity);
         }
@@ -114,17 +126,19 @@ class TimesheetService {
         $timesheet->setTimesheetDate($data['date'] ?? null);
         $timesheet->setTimeIn($data['time_in'] ?? null);
         $timesheet->setTimeOut($data['time_out'] ?? null);
-        $timesheet->setTimeBreak((int)($data['break_min'] ?? 0));
+        $timesheet->setTimeBreak((int)($data['break_min'] ?? $data['time_break'] ?? 0));
         $timesheet->setTimeTotal((float)($data['time_total'] ?? 0.0));
-        $timesheet->setAdditionalComments($data['comments'] ?? '');
+        $timesheet->setAdditionalComments($data['comments'] ?? $data['additional_comments'] ?? '');
         
         $timesheet->setIsPto((int)($data['is_pto'] ?? 0));
         
+        // Travel Toggles
         $timesheet->setTravelPerDiem((int)($data['travel_per_diem'] ?? 0));
         $timesheet->setTravelRoadScanning((int)($data['travel_road_scanning'] ?? 0));
         $timesheet->setTravelFirstLastDay((int)($data['travel_first_last_day'] ?? 0));
         $timesheet->setTravelOvernight((int)($data['travel_overnight'] ?? 0));
         
+        // Travel Details
         $timesheet->setTravelState($data['travel_state'] ?? '');
         $timesheet->setTravelCounty($data['travel_county'] ?? '');
         $timesheet->setTravelMiles((int)($data['travel_miles'] ?? 0));

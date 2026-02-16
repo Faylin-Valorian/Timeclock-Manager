@@ -2,6 +2,7 @@
 namespace OCA\TimeclockManager\Timesheet\Db;
 
 use OCP\AppFramework\Db\QBMapper;
+use OCP\AppFramework\Db\Entity;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
@@ -11,17 +12,12 @@ class TimesheetMapper extends QBMapper {
         parent::__construct($db, 'tm_timesheets', Timesheet::class);
     }
 
-    /**
-     * @throws \OCP\AppFramework\Db\DoesNotExistException
-     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
-     */
     public function find(int $id, string $userId) {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
            ->from('tm_timesheets')
            ->where(
-               // Map standard 'id' request to 'timesheet_id' column
                $qb->expr()->eq('timesheet_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT))
            )
            ->andWhere(
@@ -47,7 +43,10 @@ class TimesheetMapper extends QBMapper {
         return $this->findEntities($qb);
     }
 
-    public function insert(Timesheet $timesheet) {
+    /**
+     * @param Entity|Timesheet $timesheet
+     */
+    public function insert(Entity $timesheet): Entity {
         $sql = 'INSERT INTO `*PREFIX*tm_timesheets` 
                 (userid, timesheet_date, time_in, time_out, time_break, time_total, is_pto, 
                  travel_road_scanning, travel_first_last_day, travel_overnight, travel_per_diem, 
@@ -81,12 +80,17 @@ class TimesheetMapper extends QBMapper {
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
 
-        // Map the inserted ID back to the Entity's standard ID field
-        $timesheet->setId($this->db->lastInsertId('*PREFIX*tm_timesheets'));
+        // [CRITICAL] Set the custom ID on the entity so it knows it is saved
+        $id = $this->db->lastInsertId('*PREFIX*tm_timesheets');
+        $timesheet->setTimesheetId((int)$id);
+        
         return $timesheet;
     }
 
-    public function update(Timesheet $timesheet) {
+    /**
+     * @param Entity|Timesheet $timesheet
+     */
+    public function update(Entity $timesheet): Entity {
         $sql = 'UPDATE `*PREFIX*tm_timesheets` SET 
                 timesheet_date = ?, 
                 time_in = ?, 
@@ -127,7 +131,7 @@ class TimesheetMapper extends QBMapper {
             $timesheet->getAdditionalComments(),
             $timesheet->getArchive(),
             
-            $timesheet->getId(), // Uses the Entity's internal ID which maps to timesheet_id
+            $timesheet->getId(), // This works because setTimesheetId() syncs it
             $timesheet->getUserid()
         ];
 
@@ -137,9 +141,11 @@ class TimesheetMapper extends QBMapper {
         return $timesheet;
     }
 
-    public function delete(int $id, string $userId) {
-        $sql = 'DELETE FROM `*PREFIX*tm_timesheets` WHERE timesheet_id = ? AND userid = ?';
+    public function delete(Entity $entity): Entity {
+        $sql = 'DELETE FROM `*PREFIX*tm_timesheets` WHERE timesheet_id = ?';
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$id, $userId]);
+        $stmt->execute([$entity->getId()]);
+        
+        return $entity;
     }
 }

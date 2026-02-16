@@ -115,7 +115,11 @@
                         </div>
                         <div class="input-group"><label>Miles</label><input type="number" id="travel-miles" class="form-control"></div>
                     </div>
-                    <div class="input-group"><label>Extra Expenses ($)</label><input type="number" id="travel-extra-expense" class="form-control"></div>
+                    
+                    <div class="input-group">
+                        <label>Extra Expenses ($)</label>
+                        <input type="number" id="travel-extra-expense" class="form-control" step="0.01" placeholder="0.00">
+                    </div>
                 </div>
 
                 <div class="form-separator"></div>

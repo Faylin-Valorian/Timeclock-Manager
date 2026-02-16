@@ -19,7 +19,7 @@ class CalendarService {
     public function getCalendarEvents(string $userId, string $start, string $end, int $archive = 0): array {
         $events = [];
         
-        // 1. Add Payroll Markers (if active view)
+        // 1. Add Payroll Markers (only in Active view)
         if ($archive === 0) {
             $settings = $this->mapper->getAdminSettings();
             $events = array_merge($events, $this->generatePayrollMarkers($settings, $start, $end));
@@ -29,71 +29,91 @@ class CalendarService {
         $results = $this->mapper->findRawEntries($userId, $start, $end, $archive);
         if (empty($results)) return $events;
 
-        // 3. Helper Data
-        $ids = array_column($results, 'timesheet_id');
-        $activities = $this->mapper->getActivitiesGrouped($ids);
-        $ptoJobMap = $this->mapper->getPtoJobMap();
         $today = date('Y-m-d');
 
-        // 4. Process Rows
+        // 3. Process Rows
         foreach ($results as $row) {
             $tid = $row['timesheet_id'];
-            $totalHours = (float)$row['time_total'];
             $date = $row['timesheet_date'];
-            $isClosed = !empty($row['time_out']);
+            $totalHours = (float)$row['time_total'];
             
-            // Archived Styling
+            $hasTimeIn = !empty($row['time_in']);
+            $hasTimeOut = !empty($row['time_out']);
+            $isPto = (int)$row['is_pto'] === 1;
+            $isPerDiem = (int)$row['travel_per_diem'] === 1;
+            
+            // --- ARCHIVED VIEW ---
             if ($archive === 1) {
+                $isClosed = $hasTimeOut;
                 $title = $isClosed ? $totalHours . 'h (Archived)' : 'Incomplete (Archived)';
                 $events[] = [
-                    'id' => $tid, 'title' => $title, 'start' => $date, 'color' => '#777777', 
-                    'extendedProps' => ['isClosed' => true, 'archive' => 1]
+                    'id' => $tid . '-arch', 
+                    'title' => $title, 
+                    'start' => $date, 
+                    'color' => '#777777', 
+                    'extendedProps' => ['timesheet_id' => $tid, 'archive' => 1]
                 ];
                 continue; 
             }
 
-            // Per Diem
-            if (empty($row['time_in']) && $row['travel_per_diem'] == 1) {
-                $events[] = ['id' => $tid, 'title' => 'Per Diem', 'start' => $date, 'color' => '#17a2b8', 'extendedProps' => ['isClosed' => true]];
-                continue;
+            // --- ACTIVE VIEW ---
+
+            // A. Per Diem Tag (Independent Event)
+            // Shows even if they also clocked in/out
+            if ($isPerDiem) {
+                $events[] = [
+                    'id' => $tid . '-pd', 
+                    'title' => 'Per Diem', 
+                    'start' => $date, 
+                    'color' => '#17a2b8', // Cyan
+                    'extendedProps' => ['timesheet_id' => $tid] // Link to real ID
+                ];
             }
 
-            // Calculate Reg vs PTO
-            $regHours = 0.0; 
-            $ptoHours = 0.0;
-            $acts = $activities[$tid] ?? [];
-
-            if (empty($acts)) { 
-                $regHours = $totalHours; 
-            } else {
-                foreach ($acts as $act) {
-                    $jobName = $act['activity_description'];
-                    $percent = (float)$act['activity_percent'];
-                    $hours = $totalHours * ($percent / 100);
-                    if (isset($ptoJobMap[$jobName]) && $ptoJobMap[$jobName] === 1) { 
-                        $ptoHours += $hours; 
-                    } else { 
-                        $regHours += $hours; 
+            // B. Main Status Tag (Vacation OR Work)
+            if ($isPto) {
+                // Vacation Tag (Priority over work hours)
+                $events[] = [
+                    'id' => $tid . '-pto',
+                    'title' => 'Vacation', 
+                    'start' => $date, 
+                    'color' => '#9b59b6', // Purple
+                    'extendedProps' => ['timesheet_id' => $tid]
+                ];
+            } elseif ($hasTimeIn) {
+                // Work Tag logic
+                if ($hasTimeOut) {
+                    // Completed Day
+                    $events[] = [
+                        'id' => $tid . '-work',
+                        'title' => round($totalHours, 2) . ' hrs',
+                        'start' => $date,
+                        'color' => '#28a745', // Green
+                        'extendedProps' => ['timesheet_id' => $tid]
+                    ];
+                } else {
+                    // Incomplete Day
+                    if ($date === $today) {
+                        // Currently working
+                        $events[] = [
+                            'id' => $tid . '-active',
+                            'title' => 'Signed In',
+                            'start' => $date,
+                            'color' => '#ffc107', // Yellow/Orange
+                            'textColor' => '#000000', // Black text
+                            'extendedProps' => ['timesheet_id' => $tid]
+                        ];
+                    } else {
+                        // Forgot to clock out (Past Date)
+                        $events[] = [
+                            'id' => $tid . '-missing',
+                            'title' => 'Did Not Sign Out',
+                            'start' => $date,
+                            'color' => '#dc3545', // Red
+                            'extendedProps' => ['timesheet_id' => $tid]
+                        ];
                     }
                 }
-            }
-
-            // Work Event
-            if ($regHours > 0.01 || !$isClosed || ($totalHours < 0.01 && $ptoHours < 0.01)) {
-                $color = $isClosed ? '#28a745' : '#ffc107'; 
-                $title = $isClosed ? round($regHours, 2) . ' hrs' : 'Active';
-                
-                if ($date < $today && !$isClosed) { 
-                    $color = '#dc3545'; 
-                    $title = 'Missing Out'; 
-                }
-                
-                $events[] = ['id' => $tid, 'title' => $title, 'start' => $date, 'color' => $color, 'extendedProps' => ['isClosed' => $isClosed]];
-            }
-
-            // PTO Event
-            if ($ptoHours > 0.01) {
-                $events[] = ['id' => $tid, 'title' => 'Vacation ' . round($ptoHours, 2) . ' hrs', 'start' => $date, 'color' => '#9b59b6', 'extendedProps' => ['isClosed' => true]];
             }
         }
         return $events;
@@ -102,15 +122,20 @@ class CalendarService {
     private function generatePayrollMarkers(array $settings, string $start, string $end): array {
         $markers = [];
         $startDateStr = $settings['pay_start_date'] ?? '2024-01-01';
-        $payStart = new \DateTime($startDateStr);
+        
+        try {
+            $payStart = new \DateTime($startDateStr);
+            $viewStart = new \DateTime($start); 
+            $viewEnd = new \DateTime($end);
+        } catch (\Exception $e) {
+            return [];
+        }
+
         $freq = (int)($settings['pay_frequency'] ?? 14);
         if ($freq <= 0) $freq = 14; 
         
         $hexColor = $settings['pay_color'] ?? '#34495e';
         $rgba = $this->hex2rgba($hexColor, 0.35);
-
-        $viewStart = new \DateTime($start); 
-        $viewEnd = new \DateTime($end);
 
         $interval = $payStart->diff($viewStart); 
         $daysDiff = (int)$interval->format('%r%a');

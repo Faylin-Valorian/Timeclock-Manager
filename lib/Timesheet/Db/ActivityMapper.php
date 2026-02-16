@@ -2,6 +2,7 @@
 namespace OCA\TimeclockManager\Timesheet\Db;
 
 use OCP\AppFramework\Db\QBMapper;
+use OCP\AppFramework\Db\Entity; // [CRITICAL] Required for strict typing
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
@@ -34,21 +35,24 @@ class ActivityMapper extends QBMapper {
         $qb->execute();
     }
 
-    public function insert(Activity $activity) {
+    // [FIXED] Strict signature to match QBMapper
+    public function insert(Entity $entity): Entity {
+        /** @var Activity $entity */
+        
         $sql = 'INSERT INTO `*PREFIX*tm_activity` 
                 (timesheet_id, activity_description, activity_percent)
                 VALUES (?, ?, ?)';
 
         $params = [
-            $activity->getTimesheetId(),
-            $activity->getActivityDescription(),
-            $activity->getActivityPercent()
+            $entity->getTimesheetId(),
+            $entity->getActivityDescription(),
+            $entity->getActivityPercent()
         ];
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
 
-        $activity->setId($this->db->lastInsertId('*PREFIX*tm_activity'));
-        return $activity;
+        $entity->setId($this->db->lastInsertId('*PREFIX*tm_activity'));
+        return $entity;
     }
 }

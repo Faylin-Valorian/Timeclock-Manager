@@ -3,14 +3,20 @@ import { TimeWidget } from './time.js';
 import { LocationManager } from './location.js';
 
 export const TimesheetForm = {
+    
     init() {
-        // Initialize Helpers
-        // Pass 'calculateTotal' as a callback so the widget recalculates when time changes
         TimeWidget.init(() => this.calculateTotal());
         LocationManager.init();
-        
         this.setupToggles();
         this.setupCalculations();
+    },
+
+    /**
+     * Optional: Helper to store ID if needed for internal logic,
+     * though the Module currently handles the ID for save/delete.
+     */
+    setIds(id) {
+        this.currentId = id; 
     },
 
     // --- MODAL CONTROLS ---
@@ -22,8 +28,6 @@ export const TimesheetForm = {
         const btn = document.getElementById('btn-delete');
         if (btn) btn.style.display = show ? 'block' : 'none'; 
     },
-
-    // --- DATA MANAGEMENT ---
 
     reset() {
         document.getElementById('timesheet-form').reset();
@@ -41,18 +45,20 @@ export const TimesheetForm = {
 
     populate(data) {
         // 1. Standard Fields
-        document.getElementById('break-min').value = data.time_break || 0;
+        // Handle both potential naming conventions (DB vs Form)
+        document.getElementById('break-min').value = data.time_break || data.break_min || 0;
         document.getElementById('total-hours').value = data.time_total || 0;
         document.getElementById('additional-comments').value = data.additional_comments || '';
 
-        // 2. Time Widget Helper
+        // 2. Time Widget
         TimeWidget.set('time-in', data.time_in);
         TimeWidget.set('time-out', data.time_out);
 
         // 3. Toggles
+        // Ensure strictly checking against 1 or "1"
         document.getElementById('toggle-pto').checked = parseInt(data.is_pto) === 1;
         
-        // Travel Sub-Toggles
+        // Travel Toggles
         document.getElementById('req-per-diem').checked = parseInt(data.travel_per_diem) === 1;
         document.getElementById('road-scanning').checked = parseInt(data.travel_road_scanning) === 1;
         document.getElementById('first-last-day').checked = parseInt(data.travel_first_last_day) === 1;
@@ -61,11 +67,17 @@ export const TimesheetForm = {
         document.getElementById('travel-miles').value = data.travel_miles || 0;
         document.getElementById('travel-extra-expense').value = data.travel_extra_expenses || 0;
 
-        // 4. Location Helper (Async)
+        // 4. Location Helper
         LocationManager.populate(data.travel_state, data.travel_county);
 
         // 5. Visibility Logic
-        const hasTravel = data.travel_state || data.travel_miles > 0 || data.travel_per_diem == 1 || data.travel_extra_expenses > 0;
+        // Check if any travel data exists to auto-expand the section
+        const hasTravel = 
+            (data.travel_state && data.travel_state !== '') || 
+            (data.travel_miles > 0) || 
+            (parseInt(data.travel_per_diem) === 1) || 
+            (parseFloat(data.travel_extra_expenses) > 0);
+
         document.getElementById('toggle-travel').checked = hasTravel;
         document.getElementById('travel-fields-container').classList.toggle('hidden-section', !hasTravel);
     },
@@ -74,7 +86,6 @@ export const TimesheetForm = {
         return {
             date: document.getElementById('timesheet-date').value,
             
-            // Get Time from Helper
             time_in: TimeWidget.get('time-in'),
             time_out: TimeWidget.get('time-out'),
             
@@ -82,10 +93,8 @@ export const TimesheetForm = {
             time_total: document.getElementById('total-hours').value,
             comments: document.getElementById('additional-comments').value,
             
-            // Toggles
             is_pto: document.getElementById('toggle-pto').checked ? 1 : 0,
 
-            // Travel Data
             travel_per_diem: document.getElementById('req-per-diem').checked ? 1 : 0,
             travel_road_scanning: document.getElementById('road-scanning').checked ? 1 : 0,
             travel_first_last_day: document.getElementById('first-last-day').checked ? 1 : 0,
@@ -98,24 +107,18 @@ export const TimesheetForm = {
         };
     },
 
-    // --- INTERNAL LOGIC ---
-
     setupToggles() {
-        // Toggle Travel Section Visibility
         document.getElementById('toggle-travel')?.addEventListener('change', (e) => {
             document.getElementById('travel-fields-container').classList.toggle('hidden-section', !e.target.checked);
         });
     },
 
     setupCalculations() {
-        // Trigger recalc on Break change
+        // Recalculate total when break minutes change
         document.getElementById('break-min')?.addEventListener('input', () => this.calculateTotal());
-        
-        // Note: Time inputs trigger this via the TimeWidget callback
     },
 
     calculateTotal() {
-        // Get raw 24h strings from helper
         const tInStr = TimeWidget.get('time-in');
         const tOutStr = TimeWidget.get('time-out');
         const breakMin = parseInt(document.getElementById('break-min').value) || 0;
@@ -132,6 +135,23 @@ export const TimesheetForm = {
             
             const total = Math.max(0, diffMins / 60);
             document.getElementById('total-hours').value = total.toFixed(2);
+        }
+    },
+    
+    /**
+     * Helper to populate the datalist for State dropdown
+     */
+    populateStateDatalist(states) {
+        const list = document.getElementById('state-options');
+        if(!list) return;
+        list.innerHTML = '';
+        if (Array.isArray(states)) {
+            states.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.state_abbr;
+                opt.innerText = s.state_name;
+                list.appendChild(opt);
+            });
         }
     }
 };
