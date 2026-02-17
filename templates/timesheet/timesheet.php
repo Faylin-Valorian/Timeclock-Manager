@@ -15,11 +15,16 @@
     <div class="modal-card">
         <form id="timesheet-form">
             <div class="modal-header">
-                <div>
-                    <h2 id="modal-date-title">Entry Details</h2>
-                    <span class="modal-subtitle">Daily Work Record</span>
+                <h2 id="modal-date-title">Entry Details</h2>
+            </div>
+            <div class="modal-action-row">
+                <div class="modal-header-actions-left">
+                    <button type="button" id="btn-delete" class="action-pill action-pill-danger" title="Delete entry">Delete</button>
                 </div>
-                <button type="button" class="close-modal text-button" style="font-size: 24px;">&times;</button>
+                <div class="modal-header-actions-right">
+                    <button type="button" class="close-modal action-pill action-pill-secondary">Cancel</button>
+                    <button type="submit" class="action-pill action-pill-primary">Save</button>
+                </div>
             </div>
 
             <div class="modal-body">
@@ -113,12 +118,12 @@
                             <input list="county-options" id="travel-county" class="form-control" placeholder="Type or Select...">
                             <datalist id="county-options"></datalist>
                         </div>
-                        <div class="input-group"><label>Miles</label><input type="number" id="travel-miles" class="form-control"></div>
+                        <div class="input-group"><label>Miles</label><input type="number" id="travel-miles" class="form-control" min="0" step="1"></div>
                     </div>
                     
                     <div class="input-group">
                         <label>Extra Expenses ($)</label>
-                        <input type="number" id="travel-extra-expense" class="form-control" step="0.01" placeholder="0.00">
+                        <input type="number" id="travel-extra-expense" class="form-control" step="0.01" min="0" placeholder="0.00">
                     </div>
                 </div>
 
@@ -129,11 +134,6 @@
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" id="btn-delete" class="action-icon" style="color:red; margin-right:auto;">Delete</button>
-                <button type="button" class="close-modal secondary-button">Cancel</button>
-                <button type="submit" class="primary-button">Save</button>
-            </div>
         </form>
     </div>
 </div>

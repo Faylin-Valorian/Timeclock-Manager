@@ -20,4 +20,10 @@ class PageController extends Controller {
         // Loads templates/calendar/calendar.php
         return new TemplateResponse('timeclock-manager', 'calendar/calendar');
     }
+
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
+    public function analysis(): TemplateResponse {
+        return new TemplateResponse('timeclock-manager', 'analysis/analysis');
+    }
 }

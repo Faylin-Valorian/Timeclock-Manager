@@ -117,3 +117,10 @@
 .fc-bg-event {
     opacity: 1 !important;
 }
+
+.fc-bg-text {
+    color: var(--color-main-text);
+    font-weight: 600;
+    text-shadow: none;
+    background: transparent !important;
+}

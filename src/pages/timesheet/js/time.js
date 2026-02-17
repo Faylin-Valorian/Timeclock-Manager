@@ -27,14 +27,19 @@ export const TimeWidget = {
     set(id, dbTime) {
         const input = document.getElementById(id);
         if (!input) return;
-        
-        if (!dbTime) {
+
+        const raw = dbTime === null || dbTime === undefined ? '' : String(dbTime).trim();
+        if (!raw || raw.toLowerCase() === 'null') {
             input.value = '';
             return;
         }
 
-        const [h24, m] = dbTime.split(':');
+        const [h24, m] = raw.split(':');
         let h = parseInt(h24);
+        if (Number.isNaN(h) || m === undefined) {
+            input.value = '';
+            return;
+        }
         const ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
 

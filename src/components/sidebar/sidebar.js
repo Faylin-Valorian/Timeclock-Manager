@@ -1,6 +1,7 @@
 export const Sidebar = {
     init() {
         this.hideActiveLink();
+        this.applyAccessVisibility();
     },
 
     hideActiveLink() {
@@ -28,6 +29,24 @@ export const Sidebar = {
             if (link && link.parentElement.tagName === 'LI') {
                 link.parentElement.style.display = 'none';
             }
+        }
+    },
+
+    async applyAccessVisibility() {
+        try {
+            const client = window.TimeclockManager?.Client;
+            if (!client) return;
+            const data = await client.request('GET', '/api/admin/access/me');
+
+            const adminLink = document.getElementById('nav-link-admin')?.parentElement;
+            const analysisLink = document.getElementById('nav-link-analysis')?.parentElement;
+            const archiveBtn = document.getElementById('toggle-archive-view');
+
+            if (adminLink) adminLink.style.display = data?.admin_nav ? '' : 'none';
+            if (analysisLink) analysisLink.style.display = data?.analysis_nav ? '' : 'none';
+            if (archiveBtn) archiveBtn.style.display = data?.archive_toggle ? '' : 'none';
+        } catch (e) {
+            // Keep default UI if permissions endpoint is unavailable.
         }
     }
 };

@@ -25,6 +25,13 @@ export const RowManager = {
                 this.updateBalances(e.target);
             }
         });
+
+        // Keep values clamped even if browser applies value on blur/change only
+        container.addEventListener('change', (e) => {
+            if (e.target.classList.contains('work-percent')) {
+                this.updateBalances(e.target);
+            }
+        });
     },
 
     setJobs(jobs) {

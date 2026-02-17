@@ -78,6 +78,20 @@
 }
 .secondary-button:hover { background-color: var(--color-background-hover); }
 
+#toggle-archive-view {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#toggle-archive-view .icon-filter {
+    margin: 0;
+}
+
 /* --- NAVIGATION LINKS --- */
 .app-navigation-separator {
     height: 1px; background-color: var(--color-border); margin: 10px 15px;

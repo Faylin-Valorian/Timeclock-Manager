@@ -9,6 +9,8 @@ export const TimesheetForm = {
         LocationManager.init();
         this.setupToggles();
         this.setupCalculations();
+        this.setupNumericConstraints();
+        this.isAutoHolidayRecord = false;
     },
 
     // Optional: Keep local ID ref if needed, though Module handles it.
@@ -23,7 +25,32 @@ export const TimesheetForm = {
     setDate(date) { document.getElementById('timesheet-date').value = date; },
     toggleDeleteButton(show) { 
         const btn = document.getElementById('btn-delete');
-        if (btn) btn.style.display = show ? 'block' : 'none'; 
+        if (btn) btn.style.display = show ? 'inline-flex' : 'none'; 
+    },
+
+    setReadOnly(readOnly) {
+        const form = document.getElementById('timesheet-form');
+        if (!form) return;
+
+        const controls = form.querySelectorAll('input, select, textarea, button');
+        controls.forEach((el) => {
+            if (el.classList.contains('close-modal')) return;
+            if (el.id === 'btn-delete') return;
+            if (el.type === 'submit') return;
+            el.disabled = !!readOnly;
+        });
+    },
+
+    applyPtoTimeDefaults() {
+        const hasTimeIn = !!(document.getElementById('time-in')?.value || '').trim();
+        const hasTimeOut = !!(document.getElementById('time-out')?.value || '').trim();
+        if (hasTimeIn || hasTimeOut) return false;
+
+        TimeWidget.set('time-in', '08:00');
+        TimeWidget.set('time-out', '17:00');
+        document.getElementById('break-min').value = 60;
+        this.calculateTotal();
+        return true;
     },
 
     reset() {
@@ -38,14 +65,33 @@ export const TimesheetForm = {
         // Reset Helpers
         TimeWidget.reset();
         LocationManager.reset();
+        this.sanitizeNullishDom();
+        this.setReadOnly(false);
+        this.isAutoHolidayRecord = false;
     },
 
     populate(data) {
+        const clean = (v) => {
+            if (v === null || v === undefined) return '';
+            if (typeof v === 'string' && v.trim().toLowerCase() === 'null') return '';
+            return v;
+        };
+        const toIntOr = (v, fallback = 0) => {
+            const n = parseInt(clean(v), 10);
+            return Number.isNaN(n) ? fallback : n;
+        };
+        const toFloatOr = (v, fallback = 0) => {
+            const n = parseFloat(clean(v));
+            return Number.isNaN(n) ? fallback : n;
+        };
+
+        this.isAutoHolidayRecord = parseInt(data.is_pto, 10) === 2;
+
         // 1. Standard Fields
         // Backend sends snake_case via jsonSerialize
-        document.getElementById('break-min').value = data.time_break || data.break_min || 0;
-        document.getElementById('total-hours').value = data.time_total || 0;
-        document.getElementById('additional-comments').value = data.additional_comments || '';
+        document.getElementById('break-min').value = toIntOr(data.time_break ?? data.break_min, 0);
+        document.getElementById('total-hours').value = toFloatOr(data.time_total, 0).toFixed(2);
+        document.getElementById('additional-comments').value = String(clean(data.additional_comments) || '');
 
         // 2. Time Widget
         TimeWidget.set('time-in', data.time_in);
@@ -61,11 +107,11 @@ export const TimesheetForm = {
         document.getElementById('first-last-day').checked = parseInt(data.travel_first_last_day) === 1;
         document.getElementById('overnight').checked = parseInt(data.travel_overnight) === 1;
         
-        document.getElementById('travel-miles').value = data.travel_miles || 0;
-        document.getElementById('travel-extra-expense').value = data.travel_extra_expenses || 0;
+        document.getElementById('travel-miles').value = toIntOr(data.travel_miles, 0);
+        document.getElementById('travel-extra-expense').value = toFloatOr(data.travel_extra_expenses, 0).toFixed(2);
 
         // 4. Location Helper
-        LocationManager.populate(data.travel_state, data.travel_county);
+        LocationManager.populate(clean(data.travel_state), clean(data.travel_county));
 
         // 5. Visibility Logic
         // Check if any travel data exists to auto-expand the section
@@ -77,9 +123,17 @@ export const TimesheetForm = {
 
         document.getElementById('toggle-travel').checked = hasTravel;
         document.getElementById('travel-fields-container').classList.toggle('hidden-section', !hasTravel);
+        this.sanitizeNullishDom();
     },
 
     gatherData() {
+        const milesRaw = parseInt(document.getElementById('travel-miles').value, 10);
+        const miles = Number.isNaN(milesRaw) ? 0 : Math.max(0, milesRaw);
+
+        const expenseRaw = parseFloat(document.getElementById('travel-extra-expense').value);
+        const expenses = Number.isNaN(expenseRaw) ? 0 : Math.max(0, expenseRaw);
+        const roundedExpenses = Number(expenses.toFixed(2));
+
         return {
             date: document.getElementById('timesheet-date').value,
             
@@ -90,7 +144,10 @@ export const TimesheetForm = {
             time_total: document.getElementById('total-hours').value,
             comments: document.getElementById('additional-comments').value,
             
-            is_pto: document.getElementById('toggle-pto').checked ? 1 : 0,
+            is_pto: (() => {
+                const manual = document.getElementById('toggle-pto').checked ? 1 : 0;
+                return (this.isAutoHolidayRecord && manual === 0) ? 2 : manual;
+            })(),
 
             travel_per_diem: document.getElementById('req-per-diem').checked ? 1 : 0,
             travel_road_scanning: document.getElementById('road-scanning').checked ? 1 : 0,
@@ -99,8 +156,8 @@ export const TimesheetForm = {
             
             travel_state: document.getElementById('travel-state').value,
             travel_county: document.getElementById('travel-county').value,
-            travel_miles: document.getElementById('travel-miles').value,
-            travel_extra_expenses: document.getElementById('travel-extra-expense').value,
+            travel_miles: miles,
+            travel_extra_expenses: roundedExpenses,
         };
     },
 
@@ -113,6 +170,39 @@ export const TimesheetForm = {
     setupCalculations() {
         // Recalculate total when break minutes change
         document.getElementById('break-min')?.addEventListener('input', () => this.calculateTotal());
+    },
+
+    setupNumericConstraints() {
+        const milesInput = document.getElementById('travel-miles');
+        milesInput?.addEventListener('input', () => {
+            const raw = parseInt(milesInput.value, 10);
+            if (Number.isNaN(raw)) return;
+            if (raw < 0) milesInput.value = '0';
+        });
+
+        const expenseInput = document.getElementById('travel-extra-expense');
+        expenseInput?.addEventListener('input', () => {
+            if (!expenseInput.value) return;
+            // Keep only numeric + single decimal and clamp precision to 2.
+            let val = expenseInput.value.replace(/[^0-9.]/g, '');
+            const firstDot = val.indexOf('.');
+            if (firstDot !== -1) {
+                val = val.slice(0, firstDot + 1) + val.slice(firstDot + 1).replace(/\./g, '');
+                const [whole, frac = ''] = val.split('.');
+                val = `${whole}.${frac.slice(0, 2)}`;
+            }
+            if (val.startsWith('-')) val = val.replace('-', '');
+            expenseInput.value = val;
+        });
+        expenseInput?.addEventListener('blur', () => {
+            if (!expenseInput.value) return;
+            const parsed = parseFloat(expenseInput.value);
+            if (Number.isNaN(parsed) || parsed < 0) {
+                expenseInput.value = '0.00';
+                return;
+            }
+            expenseInput.value = parsed.toFixed(2);
+        });
     },
 
     calculateTotal() {
@@ -150,5 +240,19 @@ export const TimesheetForm = {
                 list.appendChild(opt);
             });
         }
+    },
+
+    sanitizeNullishDom() {
+        const form = document.getElementById('timesheet-form');
+        if (!form) return;
+
+        form.querySelectorAll('input, textarea').forEach((el) => {
+            if (typeof el.value === 'string' && el.value.trim().toLowerCase() === 'null') {
+                el.value = '';
+            }
+            if (typeof el.placeholder === 'string' && el.placeholder.trim().toLowerCase() === 'null') {
+                el.placeholder = '';
+            }
+        });
     }
 };

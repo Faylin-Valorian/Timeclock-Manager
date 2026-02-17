@@ -96,6 +96,45 @@
     text-decoration: none;
 }
 
+/* Modal Header Action Buttons */
+.action-pill {
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    min-height: 30px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.action-pill:hover {
+    transform: translateY(-1px);
+}
+
+.action-pill-primary {
+    background: var(--color-primary-element);
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-element);
+    box-shadow: 0 4px 12px var(--color-box-shadow);
+}
+
+.action-pill-secondary {
+    background: var(--color-main-background);
+    border-color: var(--color-border);
+    color: var(--color-main-text);
+}
+
+.action-pill-danger {
+    background: var(--color-main-background);
+    border-color: var(--color-error, #d9483b);
+    color: var(--color-error, #d9483b);
+}
+
 /* Action Icons (Trash Can, Close X) */
 .action-icon { 
     background: none; 

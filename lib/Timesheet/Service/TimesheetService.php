@@ -56,10 +56,14 @@ class TimesheetService {
         return $savedTimesheet;
     }
 
-    public function update(int $id, array $data, string $userId) {
+    public function update(int $id, array $data, string $userId, bool $allowArchivedEdit = false) {
         try {
             // 1. Fetch existing record to ensure ownership
             $timesheet = $this->mapper->find($id, $userId);
+
+            if ((int)$timesheet->getArchive() === 1 && !$allowArchivedEdit) {
+                return null;
+            }
             
             // 2. Update fields
             $this->hydrate($timesheet, $data);
@@ -92,6 +96,16 @@ class TimesheetService {
         }
     }
 
+    public function restore(int $id, string $userId) {
+        try {
+            $timesheet = $this->mapper->find($id, $userId);
+            $timesheet->setArchive(0);
+            return $this->mapper->update($timesheet);
+        } catch (DoesNotExistException $e) {
+            return null;
+        }
+    }
+
     // --- Helpers ---
 
     private function processActivities(int $timesheetId, array $items) {
@@ -99,26 +113,27 @@ class TimesheetService {
         $this->activityMapper->deleteAllForTimesheet($timesheetId);
 
         foreach ($items as $row) {
-            if (empty($row['description']) && empty($row['percent'])) continue;
+            $descRaw = $row['description'] ?? $row['activity_description'] ?? '';
+            $desc = $this->normalizeText($descRaw);
+            $pctRaw = $row['percent'] ?? $row['activity_percent'] ?? 0;
+            $pct = (int)$pctRaw;
+
+            if ($desc === '' && $pct === 0) continue;
 
             $activity = new Activity();
             $activity->setTimesheetId($timesheetId);
-            
-            // Handle snake_case or standard names
-            $desc = $row['description'] ?? $row['activity_description'] ?? '';
-            $pct = $row['percent'] ?? $row['activity_percent'] ?? 0;
 
             $activity->setActivityDescription($desc);
-            $activity->setActivityPercent((int)$pct);
+            $activity->setActivityPercent($pct);
             
             $this->activityMapper->insert($activity);
         }
     }
 
     private function hydrate(Timesheet $timesheet, array $data) {
-        $timesheet->setTimesheetDate($data['date'] ?? null);
-        $timesheet->setTimeIn($data['time_in'] ?? null);
-        $timesheet->setTimeOut($data['time_out'] ?? null);
+        $timesheet->setTimesheetDate($this->normalizeText($data['date'] ?? ''));
+        $timesheet->setTimeIn($this->normalizeTime($data['time_in'] ?? null));
+        $timesheet->setTimeOut($this->normalizeTime($data['time_out'] ?? null));
         
         // Handle variations (time_break vs break_min)
         $break = $data['break_min'] ?? $data['time_break'] ?? 0;
@@ -127,7 +142,7 @@ class TimesheetService {
         $timesheet->setTimeTotal((float)($data['time_total'] ?? 0.0));
         
         $comments = $data['comments'] ?? $data['additional_comments'] ?? '';
-        $timesheet->setAdditionalComments($comments);
+        $timesheet->setAdditionalComments($this->normalizeText($comments));
         
         $timesheet->setIsPto((int)($data['is_pto'] ?? 0));
         
@@ -138,9 +153,27 @@ class TimesheetService {
         $timesheet->setTravelOvernight((int)($data['travel_overnight'] ?? 0));
         
         // Travel Details
-        $timesheet->setTravelState($data['travel_state'] ?? '');
-        $timesheet->setTravelCounty($data['travel_county'] ?? '');
+        $timesheet->setTravelState($this->normalizeText($data['travel_state'] ?? ''));
+        $timesheet->setTravelCounty($this->normalizeText($data['travel_county'] ?? ''));
         $timesheet->setTravelMiles((int)($data['travel_miles'] ?? 0));
         $timesheet->setTravelExtraExpenses((float)($data['travel_extra_expenses'] ?? 0.0));
+    }
+
+    private function normalizeText($value): string {
+        if ($value === null) return '';
+        $text = trim((string)$value);
+        if ($text === '' || strtolower($text) === 'null') {
+            return '';
+        }
+        return $text;
+    }
+
+    private function normalizeTime($value): ?string {
+        if ($value === null) return null;
+        $text = trim((string)$value);
+        if ($text === '' || strtolower($text) === 'null') {
+            return null;
+        }
+        return $text;
     }
 }

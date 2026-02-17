@@ -3,10 +3,17 @@ return [
     'routes' => [
         // Frontend
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
+        ['name' => 'page#analysis', 'url' => '/analysis', 'verb' => 'GET'],
 
         // Calendar Module (Read-Only Visualization)
         ['name' => 'calendar#getTimesheets', 'url' => '/api/timesheets', 'verb' => 'GET'],
         ['name' => 'calendar#getHolidays', 'url' => '/api/calendar/holidays', 'verb' => 'GET'],
+        ['name' => 'analysis#getSummary', 'url' => '/api/analysis/summary', 'verb' => 'GET'],
+        ['name' => 'analysis#getDetail', 'url' => '/api/analysis/detail', 'verb' => 'GET'],
+        ['name' => 'admin#getMyAccess', 'url' => '/api/admin/access/me', 'verb' => 'GET'],
+        ['name' => 'admin#getBootstrap', 'url' => '/api/admin/bootstrap', 'verb' => 'GET'],
+        ['name' => 'admin#saveHoliday', 'url' => '/api/admin/holidays', 'verb' => 'POST'],
+        ['name' => 'admin#saveAccess', 'url' => '/api/admin/access', 'verb' => 'POST'],
 
         // [NEW] Timesheet Module (Write/CRUD Operations)
         ['name' => 'timesheet#getAttributes', 'url' => '/api/attributes', 'verb' => 'GET'],

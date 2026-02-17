@@ -132,8 +132,10 @@ class TimesheetMapper extends QBMapper {
             $timesheet->getAdditionalComments(),
             $timesheet->getArchive(),
             
-            // [CRITICAL FIX] Use getId() which is now synced with timesheet_id
-            $timesheet->getId(), 
+            // Always target the real primary key column backing this table.
+            // Using getId() is not reliable here because custom inserts/hydration can
+            // leave Entity::id unset while timesheet_id is populated.
+            $timesheet->getTimesheetId(), 
             $timesheet->getUserid()
         ];
 
@@ -146,7 +148,8 @@ class TimesheetMapper extends QBMapper {
     public function delete(Entity $entity): Entity {
         $sql = 'DELETE FROM `*PREFIX*tm_timesheets` WHERE timesheet_id = ?';
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$entity->getId()]);
+        $id = method_exists($entity, 'getTimesheetId') ? $entity->getTimesheetId() : $entity->getId();
+        $stmt->execute([$id]);
         
         return $entity;
     }

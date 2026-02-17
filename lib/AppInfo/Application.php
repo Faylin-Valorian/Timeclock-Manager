@@ -7,16 +7,20 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\BackgroundJob\IJobList;
 use OCP\INavigationManager;
 use OCP\IRequest;
 use OCP\IDBConnection;
 use OCP\IUserSession;
 use OCP\IGroupManager;
+use OCP\IUserManager;
 
 // Controllers
 use OCA\TimeclockManager\Controller\PageController;
 use OCA\TimeclockManager\Calendar\Controller\CalendarController;
 use OCA\TimeclockManager\Timesheet\Controller\TimesheetController;
+use OCA\TimeclockManager\Analysis\Controller\AnalysisController;
+use OCA\TimeclockManager\Admin\Controller\AdminController;
 
 // Services & Mappers
 use OCA\TimeclockManager\Calendar\Service\CalendarService;
@@ -24,6 +28,11 @@ use OCA\TimeclockManager\Calendar\Db\CalendarMapper;
 use OCA\TimeclockManager\Timesheet\Service\TimesheetService;
 use OCA\TimeclockManager\Timesheet\Db\TimesheetMapper;
 use OCA\TimeclockManager\Timesheet\Db\ActivityMapper;
+use OCA\TimeclockManager\Analysis\Service\AnalysisService;
+use OCA\TimeclockManager\Analysis\Db\AnalysisMapper;
+use OCA\TimeclockManager\Admin\Db\AdminMapper;
+use OCA\TimeclockManager\Admin\Service\AdminService;
+use OCA\TimeclockManager\BackgroundJob\HolidayAutoSeedJob;
 
 class Application extends App implements IBootstrap {
     public const APP_ID = 'timeclock-manager';
@@ -66,12 +75,52 @@ class Application extends App implements IBootstrap {
                 self::APP_ID,                   // Arg 1: App Name
                 $c->get(IRequest::class),       // Arg 2: Request
                 $c->get(TimesheetService::class), // Arg 3: Service
-                $c->get(IUserSession::class)->getUser()->getUID() // Arg 4: User ID String
+                $c->get(IUserSession::class)->getUser()->getUID(), // Arg 4: User ID String
+                $c->get(IGroupManager::class),  // Arg 5: Group Manager
+                $c->get(IDBConnection::class)   // Arg 6: DB
+            );
+        });
+
+        // --- 4. Analysis Addon (Decoupled Read Module) ---
+        $context->registerService(AnalysisMapper::class, function($c) {
+            return new AnalysisMapper($c->get(IDBConnection::class));
+        });
+        $context->registerService(AnalysisService::class, function($c) {
+            return new AnalysisService($c->get(AnalysisMapper::class));
+        });
+        $context->registerService('AnalysisController', function($c) {
+            return new AnalysisController(
+                $c->get(IRequest::class),
+                $c->get(IUserSession::class),
+                $c->get(IGroupManager::class),
+                $c->get(AnalysisService::class)
+            );
+        });
+
+        $context->registerService(AdminMapper::class, function($c) {
+            return new AdminMapper($c->get(IDBConnection::class));
+        });
+        $context->registerService(AdminService::class, function($c) {
+            return new AdminService(
+                $c->get(AdminMapper::class),
+                $c->get(IGroupManager::class),
+                $c->get(IUserManager::class)
+            );
+        });
+        $context->registerService('AdminController', function($c) {
+            return new AdminController(
+                $c->get(IRequest::class),
+                $c->get(IUserSession::class),
+                $c->get(AdminService::class)
             );
         });
     }
 
     public function boot(IBootContext $context): void {
+        $context->injectFn(function (IJobList $jobList): void {
+            $jobList->add(HolidayAutoSeedJob::class);
+        });
+
         $context->injectFn(function(INavigationManager $navigationManager) {
             $navigationManager->add(function() {
                 return [

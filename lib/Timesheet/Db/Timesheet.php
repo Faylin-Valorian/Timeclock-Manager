@@ -88,15 +88,15 @@ class Timesheet extends Entity implements \JsonSerializable {
             'id' => $this->getId(), 
             'timesheet_id' => $this->timesheetId,
             
-            'date' => $this->timesheetDate,
-            'userid' => $this->userid,
+            'date' => $this->sanitizeText($this->timesheetDate),
+            'userid' => $this->sanitizeText($this->userid),
             
             // Standardize snake_case for frontend
-            'time_in' => $this->timeIn,
-            'time_out' => $this->timeOut,
+            'time_in' => $this->sanitizeText($this->timeIn),
+            'time_out' => $this->sanitizeText($this->timeOut),
             'time_break' => $this->timeBreak, 
             'time_total' => $this->timeTotal,
-            'additional_comments' => $this->additionalComments,
+            'additional_comments' => $this->sanitizeText($this->additionalComments),
             
             'is_pto' => $this->isPto,
             
@@ -104,13 +104,22 @@ class Timesheet extends Entity implements \JsonSerializable {
             'travel_road_scanning' => $this->travelRoadScanning,
             'travel_first_last_day' => $this->travelFirstLastDay,
             'travel_overnight' => $this->travelOvernight,
-            'travel_state' => $this->travelState,
-            'travel_county' => $this->travelCounty,
+            'travel_state' => $this->sanitizeText($this->travelState),
+            'travel_county' => $this->sanitizeText($this->travelCounty),
             'travel_miles' => $this->travelMiles,
             'travel_extra_expenses' => $this->travelExtraExpenses,
             
             'activities' => $this->activities ?? [],
             'archive' => $this->archive
         ];
+    }
+
+    private function sanitizeText($value): string {
+        if ($value === null) return '';
+        $text = trim((string)$value);
+        if ($text === '' || strtolower($text) === 'null') {
+            return '';
+        }
+        return $text;
     }
 }

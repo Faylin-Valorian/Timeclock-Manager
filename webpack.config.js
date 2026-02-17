@@ -24,6 +24,18 @@ module.exports = {
         timesheet: [
             path.join(__dirname, 'src', 'pages', 'timesheet', 'timesheet.js'), // Add this
             path.join(__dirname, 'src', 'pages', 'timesheet', 'timesheet.scss')
+        ],
+
+        // Analysis Addon: Decoupled dashboard module
+        analysis: [
+            path.join(__dirname, 'src', 'pages', 'analysis', 'analysis.js'),
+            path.join(__dirname, 'src', 'pages', 'analysis', 'analysis.scss')
+        ],
+
+        // Admin Addon: Decoupled overlay/admin tools
+        admin: [
+            path.join(__dirname, 'src', 'pages', 'admin', 'admin.js'),
+            path.join(__dirname, 'src', 'pages', 'admin', 'admin.scss')
         ]
     },
 
@@ -91,11 +103,11 @@ module.exports = {
         extensions: ['.js', '.json', '.scss', '.css'],
         alias: {
             'src': path.resolve(__dirname, 'src/'), 
-            'process/browser': require.resolve('process/browser.js'), 
+            'process/browser': require.resolve('process/browser'),
         },
         fallback: {
-            "buffer": require.resolve("buffer/"),
-            "process": require.resolve("process/browser.js"),
+            "buffer": require.resolve('buffer/'),
+            "process": require.resolve('process/browser'),
         }
     },
     

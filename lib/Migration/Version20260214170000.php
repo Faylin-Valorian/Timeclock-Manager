@@ -43,7 +43,7 @@ class Version20260214170000 extends SimpleMigrationStep {
             $table->addColumn('time_out', 'time', ['notnull' => false]);
             $table->addColumn('time_break', 'integer', ['default' => 0]);
             $table->addColumn('time_total', 'decimal', ['precision' => 10, 'scale' => 2, 'default' => 0]);
-            $table->addColumn('travel', 'integer', ['default' => 0]);
+            $table->addColumn('is_pto', 'integer', ['default' => 0]);
             $table->addColumn('travel_road_scanning', 'integer', ['notnull' => false, 'default' => 0]);
             $table->addColumn('travel_first_last_day', 'integer', ['notnull' => false, 'default' => 0]);
             $table->addColumn('travel_overnight', 'integer', ['notnull' => false, 'default' => 0]);

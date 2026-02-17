@@ -120,18 +120,42 @@ export const CalendarModule = {
             return;
         }
 
-        const events = data.map(h => {
-            return {
-                id: 'holiday-' + (h.id || Math.random()),
-                title: h.name || h.holiday_name,
-                start: h.start || h.holiday_start_date,
-                end: h.end || h.holiday_end_date, 
-                display: 'background',
-                backgroundColor: this.hexToRgba(h.bg || '#e67e22', 0.2),
-                extendedProps: { isVisual: true }
-            };
+        const events = [];
+        data.forEach((h) => {
+            const holidayId = h.id || h.holiday_id || Math.random();
+            const title = h.name || h.holiday_name || 'Holiday';
+            const color = h.bg || h.holiday_bg || '#e67e22';
+            const start = h.start || h.holiday_start_date;
+            const end = h.end || h.holiday_end_date || start;
+
+            if (!start || !end) return;
+
+            const cursor = new Date(`${start}T00:00:00`);
+            const last = new Date(`${end}T00:00:00`);
+            if (Number.isNaN(cursor.getTime()) || Number.isNaN(last.getTime())) return;
+
+            while (cursor <= last) {
+                const dayKey = this.toISODate(cursor);
+                events.push({
+                    id: `holiday-${holidayId}-${dayKey}`,
+                    title,
+                    start: dayKey,
+                    allDay: true,
+                    display: 'background',
+                    backgroundColor: this.hexToRgba(color, 0.2),
+                    extendedProps: { isVisual: true }
+                });
+                cursor.setDate(cursor.getDate() + 1);
+            }
         });
         callback(events);
+    },
+
+    toISODate(dateObj) {
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     },
 
     /**
