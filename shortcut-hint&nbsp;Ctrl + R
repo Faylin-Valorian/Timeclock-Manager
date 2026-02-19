@@ -1,0 +1,12 @@
+templates/timesheet/timesheet.php:23:                        <div class="shortcut-hint">Ctrl + D</div>
+templates/timesheet/timesheet.php:29:                        <div class="shortcut-hint">Ctrl + C</div>
+templates/timesheet/timesheet.php:33:                        <div class="shortcut-hint">Ctrl + S</div>
+templates/timesheet/timesheet.php:93:                            <div class="shortcut-hint">Ctrl + A</div>
+templates/timesheet/timesheet.php:104:                        <div class="shortcut-hint">Ctrl + E</div>
+templates/timesheet/timesheet.php:110:                        <div class="shortcut-hint">Ctrl + Q</div>
+templates/timesheet/timesheet.php:118:                        <div class="toggle-wrapper"><div class="shortcut-hint">Ctrl + R</div><input type="checkbox" id="req-per-diem"><label for="req-per-diem">Per Diem</label></div>
+templates/timesheet/timesheet.php:119:                        <div class="toggle-wrapper"><div class="shortcut-hint">&nbsp;</div><input type="checkbox" id="road-scanning"><label for="road-scanning">Road Scanning</label></div>
+templates/timesheet/timesheet.php:120:                        <div class="toggle-wrapper"><div class="shortcut-hint">&nbsp;</div><input type="checkbox" id="first-last-day"><label for="first-last-day">First/Last Day</label></div>
+templates/timesheet/timesheet.php:121:                        <div class="toggle-wrapper"><div class="shortcut-hint">&nbsp;</div><input type="checkbox" id="overnight"><label for="overnight">Overnight</label></div>
+src/pages/admin/scss/_overlay.scss:210:.admin-user-hint {
+src/pages/admin/js/features/users.feature.js:17:            <p class="admin-user-hint">Click a user to view their calendar and time analysis data.</p>

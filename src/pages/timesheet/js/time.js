@@ -5,9 +5,12 @@
 export const TimeWidget = {
     // Callback to trigger total calculation in main form
     onUpdate: null,
+    useNative: false,
 
     init(updateCallback) {
         this.onUpdate = updateCallback;
+        this.useNative = window.matchMedia('(max-width: 1024px)').matches;
+        this.applyInputMode();
         this.setupWidgets();
     },
 
@@ -40,14 +43,22 @@ export const TimeWidget = {
             input.value = '';
             return;
         }
+        const mm = String(m).slice(0, 2).padStart(2, '0');
+        const hh24 = String(h).padStart(2, '0');
+
+        if (this.useNative || input.type === 'time') {
+            input.value = `${hh24}:${mm}`;
+            return;
+        }
+
         const ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
 
-        const formatted = `${h.toString().padStart(2,'0')}:${m} ${ampm}`;
+        const formatted = `${h.toString().padStart(2,'0')}:${mm} ${ampm}`;
         input.value = formatted;
 
         // Sync the dropdowns inside this wrapper
-        this.syncDropdowns(input, h.toString().padStart(2,'0'), m, ampm);
+        this.syncDropdowns(input, h.toString().padStart(2,'0'), mm, ampm);
     },
 
     /**
@@ -55,13 +66,25 @@ export const TimeWidget = {
      * Returns "13:30" or null
      */
     get(id) {
-        const val = document.getElementById(id)?.value;
+        const input = document.getElementById(id);
+        if (!input) return null;
+        const val = input.value;
+        if (input.type === 'time') {
+            return val ? String(val).slice(0, 5) : null;
+        }
         return this.parseTo24Hour(val);
     },
 
     // --- INTERNAL LOGIC ---
 
     setupWidgets() {
+        if (this.useNative) {
+            document.querySelectorAll('.time-popover').forEach((el) => {
+                el.style.display = 'none';
+            });
+            return;
+        }
+
         document.querySelectorAll('.time-widget-wrapper').forEach(wrapper => {
             const input = wrapper.querySelector('input');
             const popover = wrapper.querySelector('.time-popover');
@@ -70,6 +93,9 @@ export const TimeWidget = {
                 m: wrapper.querySelector('.time-select-m'),
                 ampm: wrapper.querySelector('.time-select-ampm')
             };
+            selects.h.tabIndex = -1;
+            selects.m.tabIndex = -1;
+            selects.ampm.tabIndex = -1;
 
             // 1. Show Popover
             const show = () => {
@@ -111,6 +137,14 @@ export const TimeWidget = {
                         selects.ampm.value = match[3];
                     }
                 }
+
+                // Close the popover when focus leaves this time widget (e.g. Tab to next field).
+                window.setTimeout(() => {
+                    const active = document.activeElement;
+                    if (!wrapper.contains(active)) {
+                        popover.style.display = 'none';
+                    }
+                }, 0);
             });
 
             input.addEventListener('keydown', (e) => {
@@ -120,6 +154,37 @@ export const TimeWidget = {
                     input.blur();
                 }
             });
+        });
+    },
+
+    applyInputMode() {
+        document.querySelectorAll('.time-widget-wrapper').forEach((wrapper) => {
+            const input = wrapper.querySelector('input');
+            const popover = wrapper.querySelector('.time-popover');
+            if (!input || !popover) return;
+
+            if (this.useNative) {
+                input.type = 'time';
+                input.step = '60';
+                input.placeholder = '';
+                popover.style.display = 'none';
+
+                if (!input.dataset.tmNativeBound) {
+                    const trigger = () => {
+                        if (this.onUpdate) this.onUpdate();
+                    };
+                    input.addEventListener('input', trigger);
+                    input.addEventListener('change', trigger);
+                    input.addEventListener('blur', trigger);
+                    input.dataset.tmNativeBound = '1';
+                }
+            } else {
+                input.type = 'text';
+                input.removeAttribute('step');
+                if (!input.placeholder) {
+                    input.placeholder = 'e.g. 8:00 AM';
+                }
+            }
         });
     },
 

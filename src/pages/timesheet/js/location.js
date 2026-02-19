@@ -1,8 +1,37 @@
 import { TimesheetAPI } from './api.js';
+import { SearchableDropdown } from './searchableDropdown.js';
 
 export const LocationManager = {
+    states: [],
+    counties: [],
+
     init() {
+        this.setupDropdowns();
         this.setupListeners();
+    },
+
+    setupDropdowns() {
+        const stateInput = document.getElementById('travel-state');
+        const countyInput = document.getElementById('travel-county');
+        if (!stateInput || !countyInput) return;
+
+        SearchableDropdown.attach(stateInput, {
+            freeform: true,
+            getOptions: () => this.states.map((s) => ({
+                value: s.name,
+                label: s.name,
+                search: `${s.name} ${s.abbr}`
+            }))
+        });
+
+        SearchableDropdown.attach(countyInput, {
+            freeform: true,
+            getOptions: () => this.counties.map((c) => ({
+                value: c,
+                label: c,
+                search: c
+            }))
+        });
     },
 
     setupListeners() {
@@ -11,12 +40,12 @@ export const LocationManager = {
 
         // Trigger lookup on change or blur
         const handleLookup = async (e) => {
-            const abbr = e.target.value;
-            // Only search if it looks like a state code (2 chars)
-            if (abbr && abbr.length === 2) {
+            const abbr = this.resolveStateAbbr(e.target.value);
+            if (abbr) {
                 await this.loadCounties(abbr);
             } else {
-                this.updateDatalist('county-options', []);
+                this.counties = [];
+                SearchableDropdown.refresh(document.getElementById('travel-county'));
             }
         };
 
@@ -24,23 +53,36 @@ export const LocationManager = {
         stateInput.addEventListener('blur', handleLookup);
     },
 
+    setStates(states) {
+        this.states = (states || []).map((s) => ({
+            abbr: String(s?.state_abbr || '').toUpperCase(),
+            name: String(s?.state_name || ''),
+            label: String(s?.state_name || '')
+        })).filter((s) => !!s.abbr && !!s.name);
+        SearchableDropdown.refresh(document.getElementById('travel-state'));
+    },
+
     /**
      * Pre-fills the location fields and loads the county list
      */
     async populate(state, county) {
-        document.getElementById('travel-state').value = state || '';
+        const normalizedState = this.resolveStateName(state || '');
+        document.getElementById('travel-state').value = normalizedState;
         document.getElementById('travel-county').value = county || '';
 
         // If a state is already saved, load the counties immediately so the list is ready
-        if (state) {
-            await this.loadCounties(state);
+        const abbr = this.resolveStateAbbr(state || normalizedState);
+        if (abbr) {
+            await this.loadCounties(abbr);
         }
     },
 
     reset() {
         document.getElementById('travel-state').value = '';
         document.getElementById('travel-county').value = '';
-        this.updateDatalist('county-options', []);
+        this.counties = [];
+        SearchableDropdown.refresh(document.getElementById('travel-state'));
+        SearchableDropdown.refresh(document.getElementById('travel-county'));
     },
 
     /**
@@ -48,28 +90,36 @@ export const LocationManager = {
      */
     async loadCounties(stateAbbr) {
         const counties = await TimesheetAPI.getCounties(stateAbbr);
-        // Assumes API returns [{county_name: "Orange"}, ...]
-        this.updateDatalist('county-options', counties, 'county_name'); 
+        this.counties = (counties || [])
+            .map((item) => String(item?.county_name || '').trim())
+            .filter(Boolean);
+        SearchableDropdown.refresh(document.getElementById('travel-county'));
     },
 
-    /**
-     * Generic helper to update any datalist
-     */
-    updateDatalist(elementId, items, labelKey = null) {
-        const dl = document.getElementById(elementId);
-        if (!dl) return;
-        
-        dl.innerHTML = '';
-        items.forEach(item => {
-            const opt = document.createElement('option');
-            // If item is object, use labelKey. If string, use item itself.
-            const val = labelKey ? (item[labelKey] || item.name || item) : item;
-            opt.value = val;
-            
-            // Optional: Add label if available (e.g. for States: "CA" -> "California")
-            if (item.state_name) opt.label = item.state_name;
-            
-            dl.appendChild(opt);
-        });
+    resolveStateAbbr(rawValue) {
+        const raw = String(rawValue || '').trim();
+        if (!raw) return '';
+
+        if (raw.length === 2) {
+            const fromAbbr = this.states.find((s) => s.abbr === raw.toUpperCase());
+            return fromAbbr ? fromAbbr.abbr : raw.toUpperCase();
+        }
+
+        const found = this.states.find((s) =>
+            s.name.toLowerCase() === raw.toLowerCase() ||
+            s.label.toLowerCase() === raw.toLowerCase()
+        );
+        return found ? found.abbr : '';
+    },
+
+    resolveStateName(rawValue) {
+        const raw = String(rawValue || '').trim();
+        if (!raw) return '';
+
+        const byAbbr = this.states.find((s) => s.abbr === raw.toUpperCase());
+        if (byAbbr) return byAbbr.name;
+
+        const byName = this.states.find((s) => s.name.toLowerCase() === raw.toLowerCase());
+        return byName ? byName.name : raw;
     }
 };

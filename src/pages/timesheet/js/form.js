@@ -10,6 +10,7 @@ export const TimesheetForm = {
         this.setupToggles();
         this.setupCalculations();
         this.setupNumericConstraints();
+        this.setupTabSkipTargets();
         this.isAutoHolidayRecord = false;
     },
 
@@ -25,7 +26,9 @@ export const TimesheetForm = {
     setDate(date) { document.getElementById('timesheet-date').value = date; },
     toggleDeleteButton(show) { 
         const btn = document.getElementById('btn-delete');
-        if (btn) btn.style.display = show ? 'inline-flex' : 'none'; 
+        const wrap = btn?.closest('.shortcut-button-wrap');
+        if (btn) btn.style.display = show ? 'inline-flex' : 'none';
+        if (wrap) wrap.style.display = show ? 'flex' : 'none';
     },
 
     setReadOnly(readOnly) {
@@ -169,7 +172,12 @@ export const TimesheetForm = {
 
     setupCalculations() {
         // Recalculate total when break minutes change
-        document.getElementById('break-min')?.addEventListener('input', () => this.calculateTotal());
+        const breakInput = document.getElementById('break-min');
+        breakInput?.addEventListener('input', () => this.calculateTotal());
+        breakInput?.addEventListener('focus', () => {
+            // Keyboard flow: tab into Break and overwrite immediately.
+            window.setTimeout(() => breakInput.select(), 0);
+        });
     },
 
     setupNumericConstraints() {
@@ -205,6 +213,13 @@ export const TimesheetForm = {
         });
     },
 
+    setupTabSkipTargets() {
+        document.getElementById('timesheet-date')?.setAttribute('tabindex', '-1');
+        document.getElementById('total-hours')?.setAttribute('tabindex', '-1');
+        document.getElementById('btn-add-row')?.setAttribute('tabindex', '-1');
+        document.getElementById('btn-delete')?.setAttribute('tabindex', '-1');
+    },
+
     calculateTotal() {
         const tInStr = TimeWidget.get('time-in');
         const tOutStr = TimeWidget.get('time-out');
@@ -229,17 +244,7 @@ export const TimesheetForm = {
      * Helper to populate the datalist for State dropdown
      */
     populateStateDatalist(states) {
-        const list = document.getElementById('state-options');
-        if(!list) return;
-        list.innerHTML = '';
-        if (Array.isArray(states)) {
-            states.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.state_abbr;
-                opt.innerText = s.state_name;
-                list.appendChild(opt);
-            });
-        }
+        LocationManager.setStates(states || []);
     },
 
     sanitizeNullishDom() {

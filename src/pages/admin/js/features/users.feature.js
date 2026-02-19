@@ -14,6 +14,7 @@ const UsersFeature = {
             <div class="admin-toolbar">
                 <input id="admin-user-search" class="admin-control" type="text" placeholder="Search users...">
             </div>
+            <p class="admin-user-hint">Click a user to view their calendar and time analysis data.</p>
             <div id="admin-user-list" class="admin-user-list"></div>
         `;
     },
@@ -64,4 +65,3 @@ const UsersFeature = {
 };
 
 export default UsersFeature;
-

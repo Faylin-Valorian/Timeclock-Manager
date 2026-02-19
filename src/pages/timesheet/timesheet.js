@@ -55,7 +55,9 @@ export const TimesheetModule = {
             });
         });
 
-        document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
+        // Capture phase helps intercept browser/host shortcuts as early as possible while modal is open.
+        document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e), true);
+        document.getElementById('timesheet-modal')?.addEventListener('keydown', (e) => this.handleModalTabKeydown(e), true);
     },
 
     async loadAttributes() {
@@ -114,17 +116,20 @@ export const TimesheetModule = {
             TimesheetForm.setReadOnly(false);
             TimesheetForm.showModal();
             this.captureInitialSnapshot();
+            this.focusTimeIn();
         }
     },
 
     configureHeaderActions() {
         const deleteBtn = document.getElementById('btn-delete');
+        const deleteWrap = deleteBtn?.closest('.shortcut-button-wrap');
         const saveBtn = document.querySelector('#timesheet-form button[type="submit"]');
         if (!deleteBtn || !saveBtn) return;
 
         // New records: hide delete/restore, keep save visible
         if (!this.currentId) {
             deleteBtn.style.display = 'none';
+            if (deleteWrap) deleteWrap.style.display = 'none';
             saveBtn.style.display = 'inline-flex';
             return;
         }
@@ -133,6 +138,7 @@ export const TimesheetModule = {
             deleteBtn.textContent = 'Delete';
             deleteBtn.title = 'Delete entry';
             deleteBtn.style.display = 'inline-flex';
+            if (deleteWrap) deleteWrap.style.display = 'flex';
             saveBtn.style.display = 'inline-flex';
             return;
         }
@@ -142,8 +148,10 @@ export const TimesheetModule = {
             deleteBtn.textContent = 'Restore Tab';
             deleteBtn.title = 'Restore archived entry';
             deleteBtn.style.display = 'inline-flex';
+            if (deleteWrap) deleteWrap.style.display = 'flex';
         } else {
             deleteBtn.style.display = 'none';
+            if (deleteWrap) deleteWrap.style.display = 'none';
         }
 
         saveBtn.style.display = this.permissions.can_edit_archived ? 'inline-flex' : 'none';
@@ -177,6 +185,7 @@ export const TimesheetModule = {
                 this.configureHeaderActions();
                 TimesheetForm.showModal();
                 this.captureInitialSnapshot();
+                this.focusTimeIn();
             }
         } catch (e) {
             console.error("Failed to load entry", e);
@@ -380,13 +389,172 @@ export const TimesheetModule = {
     },
 
     async handleGlobalKeydown(e) {
-        if (e.key !== 'Escape') return;
         if (!this.isModalOpen()) return;
         if (document.querySelector('.tm-popup-overlay')) return;
 
+        const isCtrlCombo = !!(e.ctrlKey || e.metaKey);
+        const key = String(e.key || '').toLowerCase();
+        const isAltShortcut = !!e.altKey && !isCtrlCombo && ['q', 'e', 'r'].includes(key);
+        // While modal is open, swallow Ctrl/Cmd shortcuts to prevent browser conflicts.
+        if ((isCtrlCombo && !e.altKey) || isAltShortcut) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        if (this.handleModalShortcutKeydown(e)) {
+            return;
+        }
+
+        if (e.key !== 'Escape') return;
         e.preventDefault();
         e.stopPropagation();
         await this.requestClose();
+    },
+
+    handleModalShortcutKeydown(e) {
+        const isCtrlCombo = !!(e.ctrlKey || e.metaKey);
+        const key = String(e.key || '').toLowerCase();
+        const code = String(e.code || '');
+        if (!isCtrlCombo || e.altKey) return false;
+
+        const addBtn = document.getElementById('btn-add-row');
+        const saveBtn = document.querySelector('#timesheet-form button[type="submit"]');
+        const cancelBtn = document.querySelector('#timesheet-form .close-modal');
+        const deleteBtn = document.getElementById('btn-delete');
+        const toggleTravel = document.getElementById('toggle-travel');
+        const togglePto = document.getElementById('toggle-pto');
+        const togglePerDiem = document.getElementById('req-per-diem');
+        const isUsable = (el) => !!(el && !el.disabled && el.offsetParent !== null);
+        const isShortcut = (letter) => key === letter || code === `Key${letter.toUpperCase()}`;
+        const toggleCheckbox = (el) => {
+            if (!el || el.disabled) return false;
+            el.checked = !el.checked;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            return true;
+        };
+
+        if (key === 'a') {
+            if (!isUsable(addBtn)) return true;
+            e.preventDefault();
+            e.stopPropagation();
+            addBtn.click();
+            return true;
+        }
+
+        if (key === 's') {
+            if (!isUsable(saveBtn)) return true;
+            e.preventDefault();
+            e.stopPropagation();
+            saveBtn.click();
+            return true;
+        }
+
+        if (key === 'c') {
+            if (!isUsable(cancelBtn)) return true;
+            e.preventDefault();
+            e.stopPropagation();
+            cancelBtn.click();
+            return true;
+        }
+
+        if (key === 'd') {
+            if (!isUsable(deleteBtn)) return true;
+            e.preventDefault();
+            e.stopPropagation();
+            deleteBtn.click();
+            return true;
+        }
+
+        if (isShortcut('q')) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleCheckbox(toggleTravel);
+            return true;
+        }
+
+        if (isShortcut('e')) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleCheckbox(togglePto);
+            return true;
+        }
+
+        if (isShortcut('r')) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (toggleTravel && !toggleTravel.checked) {
+                toggleTravel.checked = true;
+                toggleTravel.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            toggleCheckbox(togglePerDiem);
+            return true;
+        }
+
+        return false;
+    },
+
+    focusTimeIn() {
+        window.setTimeout(() => {
+            const timeIn = document.getElementById('time-in');
+            if (!timeIn || timeIn.disabled) return;
+            timeIn.focus();
+            timeIn.select?.();
+        }, 0);
+    },
+
+    handleModalTabKeydown(e) {
+        if (e.key !== 'Tab') return;
+        if (!this.isModalOpen()) return;
+        if (document.querySelector('.tm-popup-overlay')) return;
+
+        const sequence = this.getTabSequence();
+        if (sequence.length === 0) return;
+
+        e.preventDefault();
+        const current = document.activeElement;
+        const idx = sequence.indexOf(current);
+
+        if (idx === -1) {
+            (e.shiftKey ? sequence[sequence.length - 1] : sequence[0]).focus();
+            return;
+        }
+
+        const next = e.shiftKey
+            ? (idx <= 0 ? sequence.length - 1 : idx - 1)
+            : (idx >= sequence.length - 1 ? 0 : idx + 1);
+        sequence[next].focus();
+    },
+
+    getTabSequence() {
+        const isVisible = (el) => !!(el && !el.disabled && el.offsetParent !== null);
+        const add = (arr, selector) => {
+            document.querySelectorAll(selector).forEach((el) => {
+                if (isVisible(el)) arr.push(el);
+            });
+        };
+
+        const order = [];
+        add(order, '#time-in');
+        add(order, '#time-out');
+        add(order, '#break-min');
+        add(order, '#work-rows-container .work-desc');
+        add(order, '#work-rows-container .work-percent');
+        add(order, '#toggle-pto');
+        add(order, '#toggle-travel');
+        add(order, '#travel-fields-container:not(.hidden-section) #req-per-diem');
+        add(order, '#travel-fields-container:not(.hidden-section) #road-scanning');
+        add(order, '#travel-fields-container:not(.hidden-section) #first-last-day');
+        add(order, '#travel-fields-container:not(.hidden-section) #overnight');
+        add(order, '#travel-fields-container:not(.hidden-section) #travel-state');
+        add(order, '#travel-fields-container:not(.hidden-section) #travel-county');
+        add(order, '#travel-fields-container:not(.hidden-section) #travel-miles');
+        add(order, '#travel-fields-container:not(.hidden-section) #travel-extra-expense');
+        add(order, '#additional-comments');
+        add(order, '#timesheet-form button[type="submit"]');
+        add(order, '#timesheet-form .close-modal');
+
+        return order;
     }
 };
 window.TimeclockManager = window.TimeclockManager || {};

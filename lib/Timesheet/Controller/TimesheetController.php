@@ -8,6 +8,8 @@ use OCP\IGroupManager;
 use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCA\TimeclockManager\Timesheet\Service\TimesheetService;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 
 class TimesheetController extends Controller {
 
@@ -48,6 +50,8 @@ class TimesheetController extends Controller {
      * Route: /api/attributes
      * Method: GET
      */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function getAttributes() {
         $isAdmin = $this->isAdminUser();
         $qb = $this->db->getQueryBuilder();
@@ -91,6 +95,8 @@ class TimesheetController extends Controller {
      * Route: /api/timesheets/{id}
      * Method: GET
      */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function getTimesheet(int $id) {
         return new DataResponse($this->service->find($id, $this->getEffectiveUserId()));
     }
@@ -100,6 +106,7 @@ class TimesheetController extends Controller {
      * Method: POST
      * Handles both Create (New Entry) and Update (Existing Entry)
      */
+    #[NoAdminRequired]
     public function saveTimesheet() {
         $data = $this->getParams();
         $effectiveUserId = $this->getEffectiveUserId();
@@ -128,6 +135,7 @@ class TimesheetController extends Controller {
      * Route: /api/timesheets/{id}
      * Method: DELETE
      */
+    #[NoAdminRequired]
     public function deleteTimesheet(int $id) {
         $effectiveUserId = $this->getEffectiveUserId();
         $existing = $this->service->find($id, $effectiveUserId);
@@ -146,6 +154,7 @@ class TimesheetController extends Controller {
      * Route: /api/timesheets/{id}/restore
      * Method: POST
      */
+    #[NoAdminRequired]
     public function restoreTimesheet(int $id) {
         if (!$this->isAdminUser()) {
             return new DataResponse(['error' => 'Only admins can restore archived tabs.'], 403);
@@ -158,6 +167,8 @@ class TimesheetController extends Controller {
      * Route: /api/locations/counties/{abbr}
      * Method: GET
      */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function getCounties(string $abbr): DataResponse {
         $abbr = strtoupper(trim($abbr));
         if ($abbr === '') {

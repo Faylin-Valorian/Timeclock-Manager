@@ -18,6 +18,7 @@
         </div>
 
         <div class="analysis-overlay-groups">
+            <p class="analysis-overlay-detail-hint">Click a box to get a break down of hours or dates for the selected time frame.</p>
             <section class="analysis-group">
                 <h3>Hours</h3>
                 <div class="analysis-overlay-grid">

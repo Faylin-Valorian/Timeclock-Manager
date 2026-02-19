@@ -71,7 +71,7 @@ const AnalysisModule = {
                 <header class="analysis-header">
                     <div>
                         <h1>Time Analysis</h1>
-                        <p>Operational summary across hours, travel, and requests.</p>
+                        <p>Operational summary across hours, travel, and requests. Click a box to get a break down of hours or dates for the selected time frame.</p>
                     </div>
                     <div class="analysis-filters">
                         <select id="analysis-range" class="analysis-control">
@@ -86,6 +86,7 @@ const AnalysisModule = {
                 </header>
 
                 <div class="analysis-groups">
+                    <p class="analysis-detail-hint">Click a box to get a break down of hours or dates for the selected time frame.</p>
                     ${this.group('Hours', [
                         this.card('Total Hours', 'metric-total-hours'),
                         this.card('PTO Hours', 'metric-pto-hours'),

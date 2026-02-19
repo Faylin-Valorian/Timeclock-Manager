@@ -21,9 +21,4 @@ class PageController extends Controller {
         return new TemplateResponse('timeclock-manager', 'calendar/calendar');
     }
 
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function analysis(): TemplateResponse {
-        return new TemplateResponse('timeclock-manager', 'analysis/analysis');
-    }
 }

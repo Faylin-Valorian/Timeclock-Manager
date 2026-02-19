@@ -54,7 +54,12 @@
 #nav-next::before { content: "›"; font-size: 24px; line-height: 1; }
 
 /* --- VIEW BUTTONS (Month/Week/Today) --- */
-.view-buttons { display: flex; gap: 5px; justify-content: center; }
+.view-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    width: 100%;
+}
 
 .primary-button, .secondary-button {
     padding: 8px 16px; border: none; border-radius: var(--border-radius-pill);
@@ -78,18 +83,15 @@
 }
 .secondary-button:hover { background-color: var(--color-background-hover); }
 
-#toggle-archive-view {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.archive-toggle-row {
+    margin-top: 8px;
+    width: 100%;
 }
 
-#toggle-archive-view .icon-filter {
-    margin: 0;
+#toggle-archive-view {
+    width: 100%;
+    min-height: 36px;
+    border-radius: var(--border-radius);
 }
 
 /* --- NAVIGATION LINKS --- */
@@ -106,3 +108,64 @@
     opacity: 1; background-color: var(--color-background-hover);
 }
 .nav-link span[class^="icon-"] { margin-right: 10px; width: 20px; text-align: center; }
+
+@media (max-width: 1200px) {
+    #app-navigation {
+        width: 260px;
+        min-width: 260px;
+    }
+
+    .primary-button, .secondary-button {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 1024px) {
+    #app-navigation {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        padding-top: 12px;
+    }
+
+    .nav-section-header,
+    .nav-section-views {
+        padding: 8px 12px;
+    }
+
+    .nav-item {
+        padding: 4px 8px;
+    }
+
+    .nav-link {
+        border-radius: var(--border-radius);
+    }
+}
+
+@media (max-width: 700px) {
+    .date-controls {
+        padding: 8px;
+    }
+
+    #current-date-label {
+        font-size: 14px;
+    }
+
+    .view-buttons {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .primary-button, .secondary-button {
+        min-height: 34px;
+        font-size: 12px;
+        padding: 7px 8px;
+    }
+
+    .nav-link {
+        padding: 9px 10px;
+    }
+}

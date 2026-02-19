@@ -113,7 +113,11 @@ class CalendarMapper extends QBMapper {
         $map = [];
         try {
             $qb = $this->db->getQueryBuilder();
-            $rows = $qb->select('job_name', 'is_pto')->from('tm_jobs')->executeQuery()->fetchAll();
+            $rows = $qb->select('job_name', 'is_pto')
+                ->from('tm_jobs')
+                ->where($qb->expr()->eq('job_archive', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))
+                ->executeQuery()
+                ->fetchAll();
             foreach ($rows as $j) { $map[$j['job_name']] = (int)$j['is_pto']; }
         } catch (\Exception $e) {}
         return $map;

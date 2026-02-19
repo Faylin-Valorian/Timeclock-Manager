@@ -13,6 +13,7 @@ const HolidaysFeature = {
                 <button id="holiday-filter-toggle" type="button" class="admin-pill">Filter: Active</button>
                 <button id="holiday-new" type="button" class="admin-pill admin-pill-primary">+ New Holiday</button>
             </div>
+            <p class="admin-user-hint">Select an existing holiday to edit or click new holiday to create a new one.</p>
             <div class="admin-holidays-layout">
                 <div id="holiday-list" class="admin-list"></div>
                 <div class="admin-editor">
@@ -126,4 +127,3 @@ const HolidaysFeature = {
 };
 
 export default HolidaysFeature;
-

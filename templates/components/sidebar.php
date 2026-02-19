@@ -16,9 +16,9 @@
                 <button id="view-month" class="primary-button active">Month</button>
                 <button id="view-week" class="primary-button">Week</button>
                 <button id="view-today" class="secondary-button">Today</button>
-                <button id="toggle-archive-view" class="secondary-button" title="Show Archived" style="margin-left: 10px;">
-                    <span class="icon-filter"></span>
-                </button>
+            </div>
+            <div class="archive-toggle-row">
+                <button id="toggle-archive-view" class="secondary-button">Show Archive Time</button>
             </div>
         </li>
 

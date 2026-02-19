@@ -1,5 +1,6 @@
 import { RowCalculator } from './calculator.js';
 import { RowRenderer } from './renderer.js';
+import { SearchableDropdown } from './searchableDropdown.js';
 
 export const RowManager = {
     containerId: 'work-rows-container',
@@ -44,6 +45,7 @@ export const RowManager = {
 
         const row = RowRenderer.createRow(this.jobList, desc, percent);
         container.appendChild(row);
+        this.initRowDropdown(row);
 
         if (isUserAction) {
             this.updateBalances(null);
@@ -81,5 +83,19 @@ export const RowManager = {
                 input.value = result.others[index];
             });
         }
+    },
+
+    initRowDropdown(row) {
+        const input = row?.querySelector('.work-desc');
+        if (!input) return;
+
+        SearchableDropdown.attach(input, {
+            freeform: true,
+            getOptions: () => this.jobList.map((job) => ({
+                value: String(job?.job_name || ''),
+                label: String(job?.job_name || ''),
+                search: String(job?.job_name || '')
+            }))
+        });
     }
 }

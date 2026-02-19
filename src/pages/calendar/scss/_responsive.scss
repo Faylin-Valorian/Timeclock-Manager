@@ -2,27 +2,62 @@
    RESPONSIVE
    ========================================================================== */
 
-@media only screen and (max-width: 1000px) {
+@media only screen and (max-width: 1200px) {
+    #app-content-wrapper {
+        padding: 10px;
+    }
+
+    #calendar-container {
+        margin-right: 0;
+        padding: 12px;
+        padding-bottom: 22px;
+    }
+}
+
+@media only screen and (max-width: 1024px) {
     #app {
         flex-direction: column;
     }
+
     #app-navigation {
         width: 100%;
         height: auto;
+        min-width: 0 !important;
         flex-shrink: 0;
     }
+
     #calendar-container {
         min-width: 0 !important;
-        padding-bottom: 20px;
+        padding-bottom: 18px;
         margin-right: 0;
-        height: 80vh; /* Explicit height fallback for mobile */
+        height: calc(100vh - 210px);
     }
-    .fc-header-toolbar {
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 1.5em !important;
-    }
+
     .fc-view {
-        font-size: 0.85em; 
+        font-size: 0.9em;
+    }
+}
+
+@media only screen and (max-width: 700px) {
+    #app-content-wrapper {
+        padding: 8px;
+    }
+
+    #calendar-container {
+        height: calc(100vh - 235px);
+        padding: 10px;
+        padding-bottom: 14px;
+    }
+
+    .fc-view {
+        font-size: 0.82em;
+    }
+
+    .fc .fc-daygrid-day-number {
+        font-size: 12px;
+    }
+
+    .fc .fc-col-header-cell-cushion {
+        font-size: 12px;
     }
 }

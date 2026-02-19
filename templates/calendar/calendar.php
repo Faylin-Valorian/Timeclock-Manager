@@ -22,6 +22,9 @@ Util::addStyle('timeclock-manager', 'timesheet');
                     <span id="impersonation-text"></span>
                     <button type="button" id="impersonation-clear">End Impersonation</button>
                 </div>
+                <div id="archive-mode-banner" style="display:none;">
+                    <span id="archive-mode-text">Viewing archive records.</span>
+                </div>
                 <div id="calendar"></div>
                 
                 <?php print_unescaped($this->inc('timesheet/timesheet')); ?>

@@ -3,7 +3,6 @@ return [
     'routes' => [
         // Frontend
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
-        ['name' => 'page#analysis', 'url' => '/analysis', 'verb' => 'GET'],
 
         // Calendar Module (Read-Only Visualization)
         ['name' => 'calendar#getTimesheets', 'url' => '/api/timesheets', 'verb' => 'GET'],

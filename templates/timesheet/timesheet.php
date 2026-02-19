@@ -19,11 +19,20 @@
             </div>
             <div class="modal-action-row">
                 <div class="modal-header-actions-left">
-                    <button type="button" id="btn-delete" class="action-pill action-pill-danger" title="Delete entry">Delete</button>
+                    <div class="shortcut-button-wrap">
+                        <div class="shortcut-hint">Ctrl + D</div>
+                        <button type="button" id="btn-delete" class="action-pill action-pill-danger" title="Delete entry">Delete</button>
+                    </div>
                 </div>
                 <div class="modal-header-actions-right">
-                    <button type="button" class="close-modal action-pill action-pill-secondary">Cancel</button>
-                    <button type="submit" class="action-pill action-pill-primary">Save</button>
+                    <div class="shortcut-button-wrap">
+                        <div class="shortcut-hint">Ctrl + C</div>
+                        <button type="button" class="close-modal action-pill action-pill-secondary">Cancel</button>
+                    </div>
+                    <div class="shortcut-button-wrap">
+                        <div class="shortcut-hint">Ctrl + S</div>
+                        <button type="submit" class="action-pill action-pill-primary">Save</button>
+                    </div>
                 </div>
             </div>
 
@@ -80,7 +89,10 @@
                 <div class="form-section">
                     <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
                         <h3>Work Breakdown</h3>
-                        <button type="button" id="btn-add-row" class="text-button">+ Add Item</button>
+                        <div class="shortcut-button-wrap shortcut-inline">
+                            <div class="shortcut-hint">Ctrl + A</div>
+                            <button type="button" id="btn-add-row" class="text-button">+ Add Item</button>
+                        </div>
                     </div>
                     <div id="work-rows-container"></div>
                 </div>
@@ -89,11 +101,13 @@
                 
                 <div class="toggle-row-container">
                     <div class="toggle-wrapper">
+                        <div class="shortcut-hint">Ctrl + E</div>
                         <input type="checkbox" id="toggle-pto">
                         <label for="toggle-pto">Vacation / PTO</label>
                     </div>
 
                     <div class="toggle-wrapper">
+                        <div class="shortcut-hint">Ctrl + Q</div>
                         <input type="checkbox" id="toggle-travel">
                         <label for="toggle-travel">Travel / Expenses</label>
                     </div>
@@ -101,29 +115,27 @@
 
                 <div id="travel-fields-container" class="travel-box hidden-section">
                     <div class="travel-toggles-grid">
-                        <div class="toggle-wrapper"><input type="checkbox" id="req-per-diem"><label for="req-per-diem">Per Diem</label></div>
-                        <div class="toggle-wrapper"><input type="checkbox" id="road-scanning"><label for="road-scanning">Road Scanning</label></div>
-                        <div class="toggle-wrapper"><input type="checkbox" id="first-last-day"><label for="first-last-day">First/Last Day</label></div>
-                        <div class="toggle-wrapper"><input type="checkbox" id="overnight"><label for="overnight">Overnight</label></div>
+                        <div class="toggle-wrapper"><div class="shortcut-hint">Ctrl + R</div><input type="checkbox" id="req-per-diem"><label for="req-per-diem">Per Diem</label></div>
+                        <div class="toggle-wrapper"><div class="shortcut-hint">&nbsp;</div><input type="checkbox" id="road-scanning"><label for="road-scanning">Road Scanning</label></div>
+                        <div class="toggle-wrapper"><div class="shortcut-hint">&nbsp;</div><input type="checkbox" id="first-last-day"><label for="first-last-day">First/Last Day</label></div>
+                        <div class="toggle-wrapper"><div class="shortcut-hint">&nbsp;</div><input type="checkbox" id="overnight"><label for="overnight">Overnight</label></div>
                     </div>
                     
                     <div class="form-row-3">
                         <div class="input-group">
                             <label>State</label>
-                            <input list="state-options" id="travel-state" class="form-control" placeholder="Select...">
-                            <datalist id="state-options"></datalist>
+                            <input id="travel-state" class="form-control" placeholder="Select...">
                         </div>
                         <div class="input-group">
                             <label>County</label>
-                            <input list="county-options" id="travel-county" class="form-control" placeholder="Type or Select...">
-                            <datalist id="county-options"></datalist>
+                            <input id="travel-county" class="form-control" placeholder="Type or Select...">
                         </div>
                         <div class="input-group"><label>Miles</label><input type="number" id="travel-miles" class="form-control" min="0" step="1"></div>
                     </div>
                     
                     <div class="input-group">
                         <label>Extra Expenses ($)</label>
-                        <input type="number" id="travel-extra-expense" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <input type="text" id="travel-extra-expense" class="form-control" inputmode="decimal" autocomplete="off" placeholder="0.00">
                     </div>
                 </div>
 

@@ -171,10 +171,11 @@ export const TabsModule = {
 
         const updateLabel = () => {
             const isArchiveMode = CalendarModule.archiveMode === 1;
-            btn.innerHTML = '<span class="icon-filter"></span>';
-            btn.title = isArchiveMode ? 'Show Active' : 'Show Archived';
+            btn.textContent = isArchiveMode ? 'Hide Archive Time' : 'Show Archive Time';
+            btn.title = btn.textContent;
             btn.classList.toggle('primary-button', isArchiveMode);
             btn.classList.toggle('secondary-button', !isArchiveMode);
+            this.renderArchiveBanner(isArchiveMode);
         };
 
         btn.addEventListener('click', () => {
@@ -185,6 +186,20 @@ export const TabsModule = {
         });
 
         updateLabel();
+    },
+
+    renderArchiveBanner(isArchiveMode) {
+        const banner = document.getElementById('archive-mode-banner');
+        const text = document.getElementById('archive-mode-text');
+        if (!banner || !text) return;
+
+        if (!isArchiveMode) {
+            banner.style.display = 'none';
+            return;
+        }
+
+        text.textContent = 'Viewing archive records.';
+        banner.style.display = 'flex';
     },
 
     disableDoubleClickUI() {

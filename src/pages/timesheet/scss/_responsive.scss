@@ -2,9 +2,27 @@
    RESPONSIVE ADJUSTMENTS
    ========================================================================== */
 
+@media (max-width: 1200px) {
+    .form-row-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .form-row-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .travel-toggles-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 1000px) {
     .modal-card {
         width: 95%; /* Use more space on smaller screens */
+    }
+
+    .modal-body {
+        padding: 18px;
     }
 }
 
@@ -15,25 +33,37 @@
     }
     
     .modal-card { 
-        width: 100%; 
-        height: 100%; 
-        border-radius: 0; 
-        max-height: 100%;
+        width: 100%;
+        height: calc(100dvh - 10px);
+        border-radius: 10px;
+        max-height: calc(100dvh - 10px);
     }
     
     .modal-overlay {
         border-radius: 0;
+        padding: 5px;
     }
 
     .modal-action-row {
-        flex-direction: column;
+        flex-direction: row;
         align-items: flex-start;
+        justify-content: flex-end;
+        flex-wrap: wrap;
     }
 
     .modal-header-actions-left,
     .modal-header-actions-right {
-        width: 100%;
-        justify-content: flex-start;
+        width: auto;
+        justify-content: flex-end;
         flex-wrap: wrap;
+    }
+
+    .modal-body {
+        padding: 14px;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+
+    .shortcut-button-wrap {
+        align-items: flex-start;
     }
 }

@@ -226,6 +226,27 @@ class AdminService {
             }
         }
 
+        if (empty($users) && method_exists($this->userManager, 'callForAllUsers')) {
+            try {
+                $this->userManager->callForAllUsers(function ($u) use (&$users, &$seen): void {
+                    if (!$u instanceof IUser || !$this->isUserActive($u)) {
+                        return;
+                    }
+                    $uid = (string)$u->getUID();
+                    if ($uid === '' || isset($seen[$uid])) {
+                        return;
+                    }
+                    $seen[$uid] = true;
+                    $display = (string)$u->getDisplayName();
+                    $users[] = [
+                        'uid' => $uid,
+                        'display_name' => $display !== '' ? $display : $uid,
+                    ];
+                });
+            } catch (\Throwable $e) {
+            }
+        }
+
         if (empty($users) && method_exists($this->userManager, 'callForSeenUsers')) {
             try {
                 $this->userManager->callForSeenUsers(function ($u) use (&$users, &$seen): void {
